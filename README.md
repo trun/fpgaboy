@@ -2,9 +2,7 @@
 
 FPGABoy is an implementation of Nintendo's classic handheld Game Boy system. It was originally created in 2009 by Trevor Rundell and Oleg Kozhushnyan as our final project for MIT's 6.111 course (Introductory Digital Systems Laboratory). The project has been been modified substantially since then, mostly to work with the smaller FPGA's I have available to me now.
 
-Note: **THE PROJECT IS CURRENTLY NON FUNCTIONAL!** I play around with it occasionally in my spare time, but I'm not actively doing development.
-
-I welcome contributions from anyone and everyone. This was a really fun project and I would love to see it working again on a wider range of hardware.
+**THE PROJECT IS CURRENTLY NON FUNCTIONAL!** I play around with it occasionally in my spare time, but I'm not actively doing development. I welcome contributions from anyone and everyone. This was a really fun project and I would love to see it working again on a wider range of hardware.
 
 ![Tetris running on FPGABoy](https://raw.github.com/trun/fpgaboy/master/doc/static/tetris.png)
 
@@ -35,4 +33,7 @@ FPGABoy requires a number of external components for input and output. Support f
 
 # Documentation
 
-Coming soon...
+ - [fpgaboy.pdf](https://raw.githib.com/trun/fpgaboy/master/doc/fpgaboy.pdf) - Our original paper on the design and implementation of FPGABoy.
+
+
+
