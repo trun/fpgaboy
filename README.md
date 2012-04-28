@@ -33,7 +33,7 @@ FPGABoy requires a number of external components for input and output. Support f
 
 # Documentation
 
- - [fpgaboy.pdf](https://raw.githib.com/trun/fpgaboy/master/doc/fpgaboy.pdf) - Our original paper on the design and implementation of FPGABoy.
+ - [fpgaboy.pdf](https://raw.github.com/trun/fpgaboy/master/doc/fpgaboy.pdf) - Our original paper on the design and implementation of FPGABoy.
 
 
 
