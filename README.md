@@ -6,7 +6,7 @@ Note: **THE PROJECT IS CURRENTLY NON FUNCTIONAL!** I play around with it occasio
 
 I welcome contributions from anyone and everyone. This was a really fun project and I would love to see it working again on a wider range of hardware.
 
-![Tetris running on FPGABoy](https://raw.github.com/trun/fpgaboy/master/docs/static/tetris.png)
+![Tetris running on FPGABoy](https://raw.github.com/trun/fpgaboy/master/doc/static/tetris.png)
 
 # Development
 
