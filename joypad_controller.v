@@ -1,7 +1,7 @@
 `default_nettype none
 `timescale 1ns / 1ps
 
-module input_controller(
+module joypad_controller(
   input  wire        clock,
   input  wire        reset,
   input  wire        int_ack,  

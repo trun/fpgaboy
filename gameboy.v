@@ -275,7 +275,7 @@ module gameboy (
   // Input Controller
   //
   
-  input_controller joypad_controller (
+  joypad_controller joypad_controller (
     .reset(reset),
     .clock(clock),
     .int_ack(int_ack[4]),
