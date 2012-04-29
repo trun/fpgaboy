@@ -16,14 +16,19 @@ module joypad_snes_adapter(
   ////////////////////////////////////////////////////////
   // http://www.gamefaqs.com/snes/916396-snes/faqs/5395
   //
-  // Note: Clocking at about 1khz seems to work pretty well
+  // Note: This implementation does *not* match the
+  //  timings specified in the documentation above.
+  //  Instead, it uses a much simpler and slower 1KHz
+  //  clock which provides pretty good responsiveness
+  //  to button presses. Also note that the Atlys board
+  //  only provides a 3.3V Vcc instead of the spec'd 5V.
   //
   // Note: Color of wires on my controller ext. cable
-  //  +5V    - Green
-  //  Clock  - Blue
-  //  Latch  - Yellow
-  //  Data   - Red
-  //  Ground - Brown
+  //  Vcc (+5V) - Green
+  //  Clock     - Blue
+  //  Latch     - Yellow
+  //  Data      - Red
+  //  Ground    - Brown
   ////////////////////////////////////////////////////////
 
   parameter WAIT_STATE = 0;
@@ -34,47 +39,36 @@ module joypad_snes_adapter(
   reg   [3:0] button_index;
   reg  [15:0] button_state;
   
-  always @(posedge clock)
-  begin
+  /**
+   * State transitions occur on the clock's positive edge.
+   */
+  always @(posedge clock) begin
     if (reset)
-    begin
       state <= WAIT_STATE;
-    end
-    else
-    begin
+    else begin
       if (state == WAIT_STATE)
-      begin
         state <= LATCH_STATE;
-      end
       else if (state == LATCH_STATE)
-      begin
         state <= READ_STATE;
-      end
-      else if (state == READ_STATE)
-      begin
+      else if (state == READ_STATE) begin
         if (button_index == 15)
-        begin
           state <= WAIT_STATE;
-        end
       end
     end
   end
   
-  always @(negedge clock)
-  begin
-    if (reset)
-    begin
+  /**
+   * Button reading occurs on the negative edge to give
+   * values from the controller time to settle.
+   */
+  always @(negedge clock) begin
+    if (reset) begin
       button_index <= 4'b0;
       button_state <= 16'hFFFF;
-    end
-    else
-    begin
-    if (state == WAIT_STATE)
-    begin
-      button_index <= 4'b0;
-    end
-    if (state == READ_STATE)
-      begin
+    end else begin
+      if (state == WAIT_STATE)
+        button_index <= 4'b0;
+      else if (state == READ_STATE) begin
         button_state[button_index] <= controller_data;
         button_index <= button_index + 1;
       end
