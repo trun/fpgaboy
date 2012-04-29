@@ -8,7 +8,7 @@ module timer_controller (
   output reg         int_req,
   input  wire [15:0] A,
   input  wire [7:0]  Di,
-  output reg  [7:0]  Do,
+  output wire [7:0]  Do,
   input  wire        wr_n,
   input  wire        rd_n,
   input  wire        cs
@@ -43,7 +43,7 @@ module timer_controller (
   
   parameter MAX_TIMER = 8'hFF;
   
-  reg enable;
+  wire enable;
   wire e0, e1, e2, e3;
   
   divider #(1024) d0(reset, clock, e0);
@@ -106,15 +106,14 @@ module timer_controller (
       end
       
     end
-    
-    assign Do = (cs) ? reg_out : 8'hZZ;
-    assign enable =
-      (TAC[2] == 0) ? 1'b0 :
-      (TAC[1:0] == 0) ? e0 :
-      (TAC[1:0] == 1) ? e1 :
-      (TAC[1:0] == 2) ? e2 :
-      (TAC[1:0] == 3) ? e3 : 1'b0;
-    
   end
+  
+  assign Do = (cs) ? reg_out : 8'hZZ;
+  assign enable =
+    (TAC[2] == 0) ? 1'b0 :
+    (TAC[1:0] == 0) ? e0 :
+    (TAC[1:0] == 1) ? e1 :
+    (TAC[1:0] == 2) ? e2 :
+    (TAC[1:0] == 3) ? e3 : 1'b0;
 
 endmodule

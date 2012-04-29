@@ -395,6 +395,7 @@ module video_controller (
   assign Do_vram = Di_video;
   
   assign A_oam = A;
+  assign Do_oam = 8'b0; // tmp
   
   assign Do =
     (cs_vram) ? Do_vram :

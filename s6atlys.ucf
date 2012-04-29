@@ -157,16 +157,16 @@
 # NET "DDR2RZM"    LOC="L6"; # Bank = 3, Pin name = IO_L31P,        		  		  Sch name = DDR-ODT
 
 # onboard HDMI OUT
- NET "HDMIOUTCLKP" LOC = "B6"; # Bank = 0, Pin name = IO_L8P,		  Sch name = TMDS-TX-CLK_P
- NET "HDMIOUTCLKN" LOC = "A6"; # Bank = 0, Pin name = IO_L8N_VREF,	  Sch name = TMDS-TX-CLK_N
- NET "HDMIOUTD0P"  LOC = "D8"; # Bank = 0, Pin name = IO_L11P,		  Sch name = TMDS-TX-0_P
- NET "HDMIOUTD0N"  LOC = "C8"; # Bank = 0, Pin name = IO_L11N,		  Sch name = TMDS-TX-0_N
- NET "HDMIOUTD1P"  LOC = "C7"; # Bank = 0, Pin name = IO_L10P,		  Sch name = TMDS-TX-1_P
- NET "HDMIOUTD1N"  LOC = "A7"; # Bank = 0, Pin name = IO_L10N,		  Sch name = TMDS-TX-1_N
- NET "HDMIOUTD2P"  LOC = "B8"; # Bank = 0, Pin name = IO_L33P,		  Sch name = TMDS-TX-2_P
- NET "HDMIOUTD2N"  LOC = "A8"; # Bank = 0, Pin name = IO_L33N,		  Sch name = TMDS-TX-2_N
- NET "HDMIOUTSCL"  LOC = "D9"; # Bank = 0, Pin name = IO_L34P_GCLK19, Sch name = TMDS-TX-SCL
- NET "HDMIOUTSDA"  LOC = "C9"; # Bank = 0, Pin name = IO_L34N_GCLK18, Sch name = TMDS-TX-SDA
+# NET "HDMIOUTCLKP" LOC = "B6"; # Bank = 0, Pin name = IO_L8P,		  Sch name = TMDS-TX-CLK_P
+# NET "HDMIOUTCLKN" LOC = "A6"; # Bank = 0, Pin name = IO_L8N_VREF,	  Sch name = TMDS-TX-CLK_N
+# NET "HDMIOUTD0P"  LOC = "D8"; # Bank = 0, Pin name = IO_L11P,		  Sch name = TMDS-TX-0_P
+# NET "HDMIOUTD0N"  LOC = "C8"; # Bank = 0, Pin name = IO_L11N,		  Sch name = TMDS-TX-0_N
+# NET "HDMIOUTD1P"  LOC = "C7"; # Bank = 0, Pin name = IO_L10P,		  Sch name = TMDS-TX-1_P
+# NET "HDMIOUTD1N"  LOC = "A7"; # Bank = 0, Pin name = IO_L10N,		  Sch name = TMDS-TX-1_N
+# NET "HDMIOUTD2P"  LOC = "B8"; # Bank = 0, Pin name = IO_L33P,		  Sch name = TMDS-TX-2_P
+# NET "HDMIOUTD2N"  LOC = "A8"; # Bank = 0, Pin name = IO_L33N,		  Sch name = TMDS-TX-2_N
+# NET "HDMIOUTSCL"  LOC = "D9"; # Bank = 0, Pin name = IO_L34P_GCLK19, Sch name = TMDS-TX-SCL
+# NET "HDMIOUTSDA"  LOC = "C9"; # Bank = 0, Pin name = IO_L34N_GCLK18, Sch name = TMDS-TX-SDA
 
 # onboard HDMI IN1 (PMODA)
 # NET "HDMIIN1CLKP" LOC = "D11"; # Bank = 0, Pin name = IO_L36P_GCLK15, Sch name = TMDS-RXB-CLK_P

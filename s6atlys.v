@@ -7,16 +7,16 @@ module s6atlys(
   input  wire        CLK_100M,
   
   // onboard HDMI OUT
-  output wire        HDMIOUTCLKP,
-  output wire        HDMIOUTCLKN,
-  output wire        HDMIOUTD0P,
-  output wire        HDMIOUTD0N,
-  output wire        HDMIOUTD1P,
-  output wire        HDMIOUTD1N,
-  output wire        HDMIOUTD2P,
-  output wire        HDMIOUTD2N,
-  output wire        HDMIOUTSCL,
-  output wire        HDMIOUTSDA,
+  //output wire        HDMIOUTCLKP,
+  //output wire        HDMIOUTCLKN,
+  //output wire        HDMIOUTD0P,
+  //output wire        HDMIOUTD0N,
+  //output wire        HDMIOUTD1P,
+  //output wire        HDMIOUTD1N,
+  //output wire        HDMIOUTD2P,
+  //output wire        HDMIOUTD2N,
+  //output wire        HDMIOUTSCL,
+  //output wire        HDMIOUTSDA,
   
   // LEDs
   output wire  [7:0] LED,
@@ -25,7 +25,7 @@ module s6atlys(
   input  wire  [7:0] SW,
   
   // Buttons
-  input  wire  [4:0] BTN
+  input  wire  [5:0] BTN
 );
 
   //

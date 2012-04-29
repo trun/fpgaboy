@@ -60,11 +60,17 @@ module memory_controller(
   
   initial begin
     $readmemh("data/boot.rom", boot_rom, 0, 255);
-    $readmemh("data/jump.rom", jump_rom, 0, 126);
+    $readmemh("data/jump.rom", jump_rom, 0, 9);
   end
   
-  // TODO: replace with async ram
-  high_ram hr(A_high_ram, Di_cpu, clock, cs_high_ram && !wr_n, Do_high_ram);
+  async_mem #(.asz(8), .depth(127)) high_ram (
+    .rd_data(Do_high_ram),
+    .wr_clk(clock),
+    .wr_data(Di_cpu),
+    .wr_cs(cs_high_ram && ! wr_n),
+    .addr(A_high_ram),
+    .rd_cs(cs_high_ram)
+  );
   
   always @ (posedge clock)
   begin

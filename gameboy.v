@@ -47,19 +47,19 @@ module gameboy (
   //assign rd_n = 1'b1;
   //assign cs_n = 1'b1;
   
-  assign A_video = 16'b0;
-  assign Do_video = 16'b0;
-  assign wr_video_n = 1'b1;
-  assign rd_video_n = 1'b1;
-  assign cs_video_n = 1'b1;
+  //assign A_video = 16'b0;
+  //assign Do_video = 16'b0;
+  //assign wr_video_n = 1'b1;
+  //assign rd_video_n = 1'b1;
+  //assign cs_video_n = 1'b1;
   
-  assign pixel_data = 2'b0;
+  //assign pixel_data = 2'b0;
   assign pixel_clock = 1'b0;
-  assign pixel_latch = 1'b0;
-  assign hsync = 1'b0;
-  assign vsync = 1'b0;
+  //assign pixel_latch = 1'b0;
+  //assign hsync = 1'b0;
+  //assign vsync = 1'b0;
   
-  assign joypad_sel = 2'b0;
+  //assign joypad_sel = 2'b0;
 
   assign audio_left = 1'b0;
   assign audio_right = 1'b0;
@@ -249,6 +249,7 @@ module gameboy (
   // Video Controller
   //
   
+  /*
   video_controller video (
     .reset(reset),
     .clock(clock),
@@ -265,8 +266,28 @@ module gameboy (
     .hsync(hsync),
     .vsync(vsync),
     .pixel_data(pixel_data),
-    .pixel_latch(pixel_latch),
-    .pixel_clock(clock) // TODO ??
+    .pixel_latch(pixel_latch)
+    //.pixel_clock(clock) // TODO ??
+  );
+  */
+  
+  //
+  // Input Controller
+  //
+  
+  input_controller joypad_controller (
+    .reset(reset),
+    .clock(clock),
+    .int_ack(int_ack[4]),
+    .int_req(int_req[4]),
+    .A(A),
+    .Di(Do_cpu),
+    .Do(Do_joypad),
+    .cs(cs_timer),
+    .rd_n(rd_n),
+    .wr_n(wr_n),
+    .button_sel(joypad_sel),
+    .button_data(joypad_data)
   );
   
   //

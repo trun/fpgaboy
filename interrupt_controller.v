@@ -39,7 +39,7 @@ module interrupt_controller (
   //   1 <= enable
   //////////////////////////////////////
   
-  reg[7:0] IF;
+  wire[7:0] IF;
   reg[7:0] IE;
   
   parameter POLL_STATE = 0;
@@ -140,10 +140,9 @@ module interrupt_controller (
       endcase
       
     end
-    
-    assign IF = int_req; // this makes the value read only
-  
   end
+  
+  assign IF = int_req; // this makes the value read only
 
   assign Do = (cs) ? reg_out : 8'hFF;
   assign int_n = (state == WAIT_STATE) ? 1'b0 : 1'b1; // active low
