@@ -27,7 +27,6 @@ module joypad_snes_adapter_tb;
 	// Inputs
 	reg clock;
 	reg reset;
-	reg reset_init;
   
 	wire [1:0] button_sel;
 	wire controller_data;
@@ -36,19 +35,16 @@ module joypad_snes_adapter_tb;
 	wire [3:0] button_data;
 	wire controller_latch;
 	wire controller_clock;
-	wire [15:0] button_state;
 
 	// Instantiate the Unit Under Test (UUT)
 	joypad_snes_adapter uut (
 		.clock(clock), 
 		.reset(reset), 
-		.reset_init(reset_init), 
 		.button_sel(button_sel), 
 		.button_data(button_data), 
 		.controller_data(controller_data), 
 		.controller_latch(controller_latch), 
-		.controller_clock(controller_clock),
-		.button_state(button_state)
+		.controller_clock(controller_clock)
 	);
 
   assign button_sel = 2'b0;
@@ -58,10 +54,6 @@ module joypad_snes_adapter_tb;
 		// Initialize Inputs
 		clock = 0;
 		reset = 1;
-		reset_init = 1;
-
-		// Wait 100 ns for global reset to finish
-		#100 reset_init = 0;
     
     // Wait 100 ns for module reset to finish
     #100 reset = 0;
