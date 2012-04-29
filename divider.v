@@ -6,8 +6,8 @@ module divider #(parameter DELAY=50000000) (
   input wire clock,
   output wire enable);
   
-  reg[31:0] count;
-  wire[31:0] next_count;
+  reg  [31:0] count;
+  wire [31:0] next_count;
 
   always @(posedge clock)
   begin
