@@ -45,28 +45,40 @@ module s6atlys(
   
   //
   // Clocks (GameBoy clock runs at ~4.194304 MHz)
+  // 
+  // FPGABoy runs at 33.5 MHz, mostly to simplify the video controller.
+  //  Certain cycle sensitive modules, such as the CPU and Timer are
+  //  internally clocked down to the GameBoy's normal speed.
   //
   
   // Core Clock: 33.5 MHz (33.3333 MHz)
   wire coreclk, core_clock;
-  DCM_SP core_clock_dcm (.CLKIN(CLK_50M), .CLKFX(coreclk), .RST(1'b0));
-  defparam core_clock_dcm.CLKFX_DIVIDE = 3;
-  defparam core_clock_dcm.CLKFX_MULTIPLY = 1;
+  DCM_SP core_clock_dcm (.CLKIN(CLK_100M), .CLKFX(coreclk), .RST(1'b0));
+  defparam core_clock_dcm.CLKFX_DIVIDE = 6;
+  defparam core_clock_dcm.CLKFX_MULTIPLY = 2;
   defparam core_clock_dcm.CLK_FEEDBACK = "NONE";
   BUFG core_clock_buf (.I(coreclk), .O(core_clock));
   
-  // Initial Reset
-  wire reset_init, reset;
-  SRL16 reset_sr(.D(1'b0), .CLK(CLK_50M), .Q(reset_init),
-                 .A0(1'b1), .A1(1'b1), .A2(1'b1), .A3(1'b1));
-  defparam reset_sr.INIT = 16'hFFFF;
+  // TODO: HDMI Clocks
+  //  No idea what these look like yet.
   
-  // TODO debug clock
+  // TODO: Debug Clock 
+  //  The clock should mux between the core clock and a switch based 
+  //  debug clock to allow a simple method of stepping through instructions.
+  
+  // Game Clock
   wire clock;
   assign clock = core_clock;
   
-  // TODO reset switch
-  wire reset_sync = 0;
+  // Initial Reset
+  wire reset_init, reset;
+  SRL16 reset_sr(.D(1'b0), .CLK(CLK_100M), .Q(reset_init),
+                 .A0(1'b1), .A1(1'b1), .A2(1'b1), .A3(1'b1));
+  defparam reset_sr.INIT = 16'hFFFF;
+  
+  // Power Button
+  wire reset_sync;
+  debounce debounce_reset_sync(reset_init, core_clock, !SW[7], reset_sync);
   assign reset = (reset_init || reset_sync);
   
   //
@@ -139,7 +151,7 @@ endmodule
 ////////////////////////////////////////////////////////////////////////////////
 
 module debounce (reset, clock, noisy, clean);
-  parameter DELAY = 500000;   // .01 sec with a 50Mhz clock
+  parameter DELAY = 1000000;   // .01 sec with a 100Mhz clock
   input reset, clock, noisy;
   output clean;
   
