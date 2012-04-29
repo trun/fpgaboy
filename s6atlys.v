@@ -25,7 +25,10 @@ module s6atlys(
   input  wire  [7:0] SW,
   
   // Buttons
-  input  wire  [5:0] BTN
+  input  wire  [5:0] BTN,
+  
+  // PMOD Connector
+  inout  wire  [7:0] JB
 );
 
   //
@@ -69,6 +72,15 @@ module s6atlys(
   // Game Clock
   wire clock;
   assign clock = core_clock;
+  
+  // Joypad Clock: 1 KHz
+  wire pulse_1khz;
+  reg  clock_1khz;
+  divider#(.DELAY(33333)) div_1ms (
+    .reset(reset_init),
+    .clock(core_clock),
+    .enable(pulse_1khz)
+  );
   
   // Initial Reset
   wire reset_init, reset;
@@ -133,6 +145,30 @@ module s6atlys(
     // debug output
     .dbg_led(LED)
   );
+  
+  // Joypad Adapter
+  joypad_snes_adapter joypad_adapter(
+    .clock(clock_1khz),
+    .reset(reset),
+    .button_sel(joypad_sel),
+    .button_data(joypad_data),
+    .controller_data(JB[0]),
+    .controller_clock(JB[1]),
+    .controller_latch(JB[2])
+  );
+  
+  // drive divider clocks
+  always @(posedge core_clock)
+  begin
+    if (reset_init)
+    begin
+      clock_1khz <= 1'b0;
+    end
+    else if (pulse_1khz)
+    begin
+      clock_1khz <= !clock_1khz;
+    end
+  end
   
   assign Di = 8'b0;
   assign Di_video = 8'b0;
