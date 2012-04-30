@@ -46,6 +46,12 @@ module s6atlys(
   //assign VGA_HSYNC = 0;
   //assign VGA_VSYNC = 0;
   
+  // Initial Reset
+  wire reset_init, reset;
+  SRL16 reset_sr(.D(1'b0), .CLK(CLK_100M), .Q(reset_init),
+                 .A0(1'b1), .A1(1'b1), .A2(1'b1), .A3(1'b1));
+  defparam reset_sr.INIT = 16'hFFFF;
+  
   //
   // Clocks (GameBoy clock runs at ~4.194304 MHz)
   // 
@@ -62,16 +68,8 @@ module s6atlys(
   defparam core_clock_dcm.CLK_FEEDBACK = "NONE";
   BUFG core_clock_buf (.I(coreclk), .O(core_clock));
   
-  // TODO: HDMI Clocks
-  //  No idea what these look like yet.
-  
-  // TODO: Debug Clock 
-  //  The clock should mux between the core clock and a switch based 
-  //  debug clock to allow a simple method of stepping through instructions.
-  
-  // Game Clock
-  wire clock;
-  assign clock = core_clock;
+  // HDMI Clocks
+  //  TODO: No idea what these look like yet.
   
   // Joypad Clock: 1 KHz
   wire pulse_1khz;
@@ -82,39 +80,60 @@ module s6atlys(
     .enable(pulse_1khz)
   );
   
-  // Initial Reset
-  wire reset_init, reset;
-  SRL16 reset_sr(.D(1'b0), .CLK(CLK_100M), .Q(reset_init),
-                 .A0(1'b1), .A1(1'b1), .A2(1'b1), .A3(1'b1));
-  defparam reset_sr.INIT = 16'hFFFF;
+  //
+  // Switches
+  //   
+  //   SW0-SW4 - Breakpoints Switches (Not Implemented)
+  //   SW5 - Step Clock
+  //   SW6 - Step Enable
+  //   SW7 - Power (Reset)
+  //
   
-  // Power Button
-  wire reset_sync;
+  wire reset_sync, step_sync, step_enable;
+  debounce debounce_step_sync(reset_init, core_clock, !SW[5], step_sync);
+  debounce debounce_step_enable(reset_init, core_clock, !SW[6], step_enable);
   debounce debounce_reset_sync(reset_init, core_clock, !SW[7], reset_sync);
+  
   assign reset = (reset_init || reset_sync);
+  
+  //
+  // Buttons
+  //
+  // BTN0-BTN5 - Not Implemented
+  //
+  
+  // Game Clock
+  wire clock;
+  BUFGMUX clock_mux(.S(step_enable), .O(clock),
+                    .I0(core_clock), .I1(step_sync));
   
   //
   // GameBoy
   //
   
+  // GB <-> Cartridge + WRAM
   wire [15:0] A;
   wire [7:0] Di;
   wire [7:0] Do;
   wire wr_n, rd_n, cs_n;
   
+  // GB <-> VRAM
   wire [15:0] A_vram;
   wire [7:0] Di_vram;
   wire [7:0] Do_vram;
   wire wr_vram_n, rd_vram_n, cs_vram_n;
   
+  // GB <-> Display Adapter
   wire [1:0] pixel_data;
   wire pixel_clock;
   wire pixel_latch;
   wire hsync, vsync;
   
+  // GB <-> Joypad Adapter
   wire [3:0] joypad_data;
   wire [1:0] joypad_sel;
   
+  // GB <-> Audio Adapter
   wire audio_left, audio_right;
   
   gameboy gameboy (
@@ -157,7 +176,7 @@ module s6atlys(
     .controller_latch(JB[2])
   );
   
-  // drive divider clocks
+  // driver for divider clocks
   always @(posedge core_clock)
   begin
     if (reset_init)
