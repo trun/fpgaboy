@@ -6,17 +6,14 @@ module oled_spi(
   input wire reset,
   input wire shutdown,
   
-  output reg cs,
+  output wire cs,
   output reg sdin,
-  output reg sclk,
+  output wire sclk,
   output reg dc,
   output reg res,
   output reg vbatc,
   output reg vddc
 );
-
-  assign cs = 0;
-  assign sclk = !clock;
 
   parameter WAIT = 1;
   parameter SEND = 2;  // send 1 byte
@@ -61,6 +58,12 @@ module oled_spi(
       wait_max <= 32'b0;
       state <= STARTUP_1;
       next_state <= 1'b0;
+      
+      sdin <= 1'b0;
+      dc <= 1'b0;
+      res <= 1'b1;
+      vddc <= 1'b1;
+      vbatc <= 1'b1;
     end
     
     // SHUTDOWN
@@ -130,12 +133,12 @@ module oled_spi(
       else if (state == STARTUP_2) begin
         send_buf <= 8'hAE;
         state <= SEND;
-        next_state <= STARTUP_2;
+        next_state <= STARTUP_3;
       end
       
       // STARTUP_3 -- clear screen
       else if (state == STARTUP_3) begin
-        rst <= 0;
+        res <= 0;
         wait_max <= 5000; // 1ms
         state <= WAIT;
         next_state <= STARTUP_4;
@@ -143,7 +146,7 @@ module oled_spi(
       
       // STARTUP_4 -- set charge pump
       else if (state == STARTUP_4) begin
-        rst <= 1;
+        res <= 1;
         send_buf <= 16'h148D;
         state <= SEND2;
         next_state <= STARTUP_5;
@@ -207,5 +210,8 @@ module oled_spi(
       end
     end
   end
+  
+  assign cs = 0;
+  assign sclk = !clock;
 
 endmodule
