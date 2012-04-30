@@ -40,26 +40,12 @@ module gameboy (
   // Debug - CPU Pins
   output wire  [7:0] dbg_led
 );
-
-  //assign A = 16'b0;
-  //assign Do = 16'b0;
-  //assign wr_n = 1'b1;
-  //assign rd_n = 1'b1;
-  //assign cs_n = 1'b1;
-  
-  //assign A_video = 16'b0;
-  //assign Do_video = 16'b0;
-  //assign wr_video_n = 1'b1;
-  //assign rd_video_n = 1'b1;
-  //assign cs_video_n = 1'b1;
   
   //assign pixel_data = 2'b0;
   assign pixel_clock = 1'b0;
   //assign pixel_latch = 1'b0;
   //assign hsync = 1'b0;
   //assign vsync = 1'b0;
-  
-  //assign joypad_sel = 2'b0;
 
   assign audio_left = 1'b0;
   assign audio_right = 1'b0;
@@ -157,7 +143,6 @@ module gameboy (
   
   wire cs_interrupt;
   wire cs_timer;
-  wire cs_video;
   wire cs_sound;
   wire cs_joypad;
   
