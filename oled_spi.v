@@ -28,15 +28,11 @@ module oled_spi(
   parameter STARTUP_2  = 11;
   parameter STARTUP_3  = 12;
   parameter STARTUP_4  = 13;
-  parameter STARTUP_4b = 14;
-  parameter STARTUP_5  = 15;
-  parameter STARTUP_5b = 16;
-  parameter STARTUP_6  = 17;
-  parameter STARTUP_7  = 18;
-  parameter STARTUP_7b = 19;
-  parameter STARTUP_8  = 20;
-  parameter STARTUP_8b = 21;
-  parameter STARTUP_9  = 22;
+  parameter STARTUP_5  = 14;
+  parameter STARTUP_6  = 15;
+  parameter STARTUP_7  = 16;
+  parameter STARTUP_8  = 17;
+  parameter STARTUP_9  = 18;
   
   parameter SHUTDOWN_1 = 6;
   parameter SHUTDOWN_2 = 7;
@@ -148,34 +144,21 @@ module oled_spi(
       // STARTUP_4 -- set charge pump
       else if (state == STARTUP_4) begin
         rst <= 1;
-        send_buf <= 8'h8D;
-        state <= SEND;
-        next_state <= STARTUP_4b;
-      end
-      
-      // STARTUP_4b
-      else if (state == STARTUP_4b) begin
-        send_buf <= 8'h14;
-        state <= SEND;
+        send_buf <= 16'h148D;
+        state <= SEND2;
         next_state <= STARTUP_5;
       end
       
       // STARTUP_5 -- set pre-charge period
       else if (state == STARTUP_5) begin
-        send_buf <= 8'hD9;
-        state <= SEND;
-        next_state <= STARTUP_5b;
-      end
-      
-      // STARTUP_5b
-      else if (state == STARTUP_5b) begin
-        send_buf <= 8'hF1;
-        state <= SEND;
+        send_buf <= 16'hF1D9;
+        state <= SEND2;
         next_state <= STARTUP_6;
       end
       
       // STARTUP_6 -- apply power to VBAT
       else if (state == STARTUP_6) begin
+        vbatc <= 0;
         wait_max <= 500000; // 100ms
         state <= WAIT;
         next_state <= STARTUP_7;
@@ -183,29 +166,15 @@ module oled_spi(
       
       // STARTUP_7 -- invert the display
       else if (state == STARTUP_7) begin
-        send_buf <= 8'hA1;
-        state <= SEND;
-        next_state <= STARTUP_7b;
-      end
-      
-      // STARTUP_7b
-      else if (state == STARTUP_7b) begin
-        send_buf <= 8'hC8;
-        state <= SEND;
+        send_buf <= 16'hC8A1;
+        state <= SEND2;
         next_state <= STARTUP_8;
       end
       
       // STARTUP_8 -- select squential COM configuration
       else if (state == STARTUP_8) begin
-        send_buf <= 8'hDA;
-        state <= SEND;
-        next_state <= STARTUP_8b;
-      end
-      
-      // STARTUP_8b
-      else if (state == STARTUP_8b) begin
-        send_buf <= 8'h20;
-        state <= SEND;
+        send_buf <= 16'h20DA;
+        state <= SEND2;
         next_state <= STARTUP_9;
       end
       
@@ -225,7 +194,7 @@ module oled_spi(
       
       // SHUTDOWN_2 -- turn off VBAT
       else if (state == SHUTDOWN_2) begin
-        vbat <= 1;
+        vbatc <= 1;
         wait_max <= 500000; // 100ms
         state <= WAIT;
         next_state <= SHUTDOWN_3;
@@ -233,7 +202,7 @@ module oled_spi(
       
       // SHUTDOWN_4 -- turn off VDD
       else if (state == SHUTDOWN_3) begin
-        vdd <= 1;
+        vddc <= 1;
         state <= 0; // TODO
       end
     end
