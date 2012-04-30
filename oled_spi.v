@@ -83,6 +83,7 @@ module oled_spi(
         if (send_idx == 7 && send_ctr == send_max) begin
           send_idx <= 0;
           send_ctr <= 0;
+          send_max <= 0;
           state <= next_state;
         end else if (send_idx == 7) begin
           send_idx <= 0;
