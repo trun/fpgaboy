@@ -258,9 +258,53 @@
 # NET "VHDCIIO2<17>" LOC = "T7";  # Bank = 2,  Pin name = IO_L46N,        		Sch name = EXP-IO18_N
 # NET "VHDCIIO2<18>" LOC = "P7";  # Bank = 2,  Pin name = *IO_L47N,        		Sch name = EXP-IO19_N
 # NET "VHDCIIO2<19>" LOC = "V5";  # Bank = 2,  Pin name = IO_49N_D4,        		Sch name = EXP-IO20_N 
+
+# onboard VHDCI - VmodMIB PMOD Connectors
+# NET "VHDCIJA<0>"  LOC = "T11"; # Bank = 2,  Pin name = IO_L16N_VREF,       Sch name = JA-D0_N
+# NET "VHDCIJA<1>"  LOC = "R11"; # Bank = 2,  Pin name = IO_L16P,            Sch name = JA-D0_P
+# NET "VHDCIJA<2>"  LOC = "P11"; # Bank = 2,  Pin name = *IO_L20N,           Sch name = JA-D2_N
+# NET "VHDCIJA<3>"  LOC = "N10"; # Bank = 2,  Pin name = *IO_L20P,           Sch name = JA-D2_P
+# NET "VHDCIJA<4>"  LOC = "T10"; # Bank = 2,  Pin name = IO_L29N_GCLK2,      Sch name = JA-CLK_N
+# NET "VHDCIJA<5>"  LOC = "R10"; # Bank = 2,  Pin name = IO_L29P_GCLK3,      Sch name = JA-CLK_P
+# NET "VHDCIJA<6>"  LOC = "V12"; # Bank = 2,  Pin name = *IO_L19N,           Sch name = JA-D1_N
+# NET "VHDCIJA<7>"  LOC = "T12"; # Bank = 2,  Pin name = *IO_L19P,           Sch name = JA-D1_P
+
+# NET "VHDCIJB<0>"  LOC = "N9";  # Bank = 2,  Pin name = *IO_L22N,               Sch name = JB-D0_N
+# NET "VHDCIJB<1>"  LOC = "M10"; # Bank = 2,  Pin name = *IO_L22P,               Sch name = JB-D0_P
+# NET "VHDCIJB<2>"  LOC = "T8";  # Bank = 2,  Pin name = IO_L31N_GCLK30_D15,     Sch name = JB-D2_N
+# NET "VHDCIJB<3>"  LOC = "R8";  # Bank = 2,  Pin name = IO_L31P_GCLK31_D14,     Sch name = JB-D2_P
+# NET "VHDCIJB<4>"  LOC = "V10"; # Bank = 2,  Pin name = IO_L30N_GCLK0_USERCCLK, Sch name = JB-CLK_N
+# NET "VHDCIJB<5>"  LOC = "U10"; # Bank = 2,  Pin name = IO_L30P_GCLK1_D13,      Sch name = JB-CLK_P
+# NET "VHDCIJB<6>"  LOC = "V11"; # Bank = 2,  Pin name = IO_L23N,                Sch name = JB-D1_N
+# NET "VHDCIJB<7>"  LOC = "U11"; # Bank = 2,  Pin name = IO_L23P,                Sch name = JB-D1_P
+
+# NET "VHDCIJC<0>"  LOC = "V15"; # Bank = 2,  Pin name = *IO_L5N,            Sch name = JC-D0_N
+# NET "VHDCIJC<1>"  LOC = "U15"; # Bank = 2,  Pin name = *IO_L5P,            Sch name = JC-D0_P
+# NET "VHDCIJC<2>"  LOC = "N11"; # Bank = 2,  Pin name = *IO_L15N,           Sch name = JC-D2_N
+# NET "VHDCIJC<3>"  LOC = "M11"; # Bank = 2,  Pin name = *IO_L15P,           Sch name = JC-D2_P
+# NET "VHDCIJC<4>"  LOC = "V16"; # Bank = 2,  Pin name = IO_L2N_CMPMOSI,     Sch name = JC-CLK_N
+# NET "VHDCIJC<5>"  LOC = "U16"; # Bank = 2,  Pin name = IO_L2P_CMPCLK,      Sch name = JC-CLK_P
+# NET "VHDCIJC<6>"  LOC = "V13"; # Bank = 2,  Pin name = IO_L14N_D12,        Sch name = JC-D1_N
+# NET "VHDCIJC<7>"  LOC = "U13"; # Bank = 2,  Pin name = IO_L14P_D11,        Sch name = JC-D1_P
+
+# NET "VHDCIJD<0>"  LOC = "T7";  # Bank = 2,  Pin name = IO_L46N,            Sch name = JD-D0_N
+# NET "VHDCIJD<1>"  LOC = "R7";  # Bank = 2,  Pin name = IO_L46P,            Sch name = JD-D0_P
+# NET "VHDCIJD<2>"  LOC = "V5";  # Bank = 2,  Pin name = IO_49N_D4,          Sch name = JD-D2_N
+# NET "VHDCIJD<3>"  LOC = "U5";  # Bank = 2,  Pin name = IO_49P_D3,          Sch name = JD-D2_P
+# NET "VHDCIJD<4>"  LOC = "V6";  # Bank = 2,  Pin name = IO_L45N,            Sch name = JD-CLK_N
+# NET "VHDCIJD<5>"  LOC = "T6";  # Bank = 2,  Pin name = IO_L45P,            Sch name = JD-CLK_P
+# NET "VHDCIJD<6>"  LOC = "P7";  # Bank = 2,  Pin name = *IO_L47N,           Sch name = JD-D1_N
+# NET "VHDCIJD<7>"  LOC = "N6";  # Bank = 2,  Pin name = *IO_L47P,           Sch name = JD-D1_P
+
+# NET "VHDCIJE<13>" LOC = "V8";  # Bank = 2,  Pin name = IO_L41N_VREF,       Sch name = JE1/SDA
+# NET "VHDCIJE<13>" LOC = "U8";  # Bank = 2,  Pin name = IO_L41P,            Sch name = JE2/SCL
+# NET "VHDCIJE<15>" LOC = "P8";  # Bank = 2,  Pin name = *IO_L44N,           Sch name = JE3
+# NET "VHDCIJE<15>" LOC = "N7";  # Bank = 2,  Pin name = *IO_L44P,           Sch name = JE4
+# NET "VHDCIJE<12>" LOC = "N8";  # Bank = 2,  Pin name = *IO_L40N,           Sch name = JE7
+# NET "VHDCIJE<12>" LOC = "M8";  # Bank = 2,  Pin name = *IO_L40P,           Sch name = JE8
+# NET "VHDCIJE<14>" LOC = "V7";  # Bank = 2,  Pin name = IO_L43N,            Sch name = JE9
+# NET "VHDCIJE<14>" LOC = "U7";  # Bank = 2,  Pin name = IO_L43P,            Sch name = JE10
  
 # USB UART Connector
 # NET "UartRx" LOC = "A16"; # Bank = 0, Pin name = IO_L66N_SCP0, Sch name = USBB-RXD
 # NET "UartTx" LOC = "B16"; # Bank = 0, Pin name = IO_L66P_SCP1, Sch name = USBB-TXD
-
-
