@@ -172,7 +172,6 @@ module s6atlys(
   
   assign Di = 8'b0;
   assign Di_video = 8'b0;
-  assign joypad_data = 4'b0;
   
 endmodule
   
