@@ -68,7 +68,7 @@ module oled_spi(
     
     // SHUTDOWN
     else if (shutdown) begin
-      if (state >= 1 && state <= 5) begin
+      if (state > 0 && state < 10) begin
         next_state <= SHUTDOWN_1;
       end else begin
         state <= SHUTDOWN_1;
