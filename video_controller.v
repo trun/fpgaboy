@@ -4,28 +4,30 @@
 module video_controller (
   input  wire        reset,
   input  wire        clock,
+  
+  // Interrupts
   input  wire        int_vblank_ack,
   output reg         int_vblank_req,
   input  wire        int_lcdc_ack,
   output reg         int_lcdc_req,
   
-  // VRAM + OAM + Registers
+  // VRAM + OAM + Registers (PPU <-> MMU)
   input  wire [15:0] A,
-  input  wire  [7:0] Di,
-  output wire  [7:0] Do,
+  input  wire  [7:0] Di, // in from MMU
+  output wire  [7:0] Do, // out to MMU
   input  wire        rd_n,
   input  wire        wr_n,
   input  wire        cs,
   
-  // VRAM
-  output wire [15:0] A_video,
-  output wire  [7:0] Do_video, // out to VRAM
-  input  wire  [7:0] Di_video, // in from VRAM
-  output wire        rd_video_n,
-  output wire        wr_video_n,
-  output wire        cs_video,
+  // VRAM (PPU <-> VRAM)
+  output wire [15:0] A_vram,
+  output wire  [7:0] Do_vram, // out to VRAM
+  input  wire  [7:0] Di_vram, // in from VRAM
+  output wire        rd_vram_n,
+  output wire        wr_vram_n,
+  output wire        cs_vram_n,
   
-  // video output -- TODO pixel clock?
+  // LCD Output -- TODO pixel clock?
   output wire        hsync,
   output wire        vsync,
   output reg   [7:0] line_count,
@@ -199,11 +201,6 @@ module video_controller (
   
   wire  [7:0] next_line_count;
   wire  [8:0] next_pixel_count;
-  
-  wire [12:0] A_vram;
-  wire  [7:0] Do_vram;
-  wire        wr_vram_n;
-  wire        cs_vram;
   
   wire  [7:0] A_oam;
   wire  [7:0] Do_oam;
@@ -380,9 +377,9 @@ module video_controller (
   assign hsync = (pixel_count > OAM_ACTIVE + RAM_ACTIVE + HACTIVE_VIDEO) ? 1'b1 : 1'b0;
   assign vsync = (line_count > VACTIVE_VIDEO) ? 1'b1 : 1'b0;
   
-  assign cs_vram = cs && (A >= 16'h8000 && A < 16'hA000);
-  assign cs_oam = cs && (A >= 16'hFE00 && A < 16'hFEA0);
-  assign cs_reg = cs && !cs_vram && !cs_oam;
+  assign cs_vram_n = !(cs && A >= 16'h8000 && A < 16'hA000);
+  assign cs_oam = cs && A >= 16'hFE00 && A < 16'hFEA0;
+  assign cs_reg = cs && cs_vram_n && !cs_oam;
   
   assign wr_vram_n = !(cs_oam && !wr_n && mode != RAM_LOCK_MODE);
   assign wr_oam_n = !(cs_oam && !wr_n && mode != RAM_LOCK_MODE && mode != OAM_LOCK_MODE);
@@ -391,14 +388,14 @@ module video_controller (
   assign STAT[2] = (line_count == LYC) ? 1 : 0; // LYC Coincidence flag
   assign STAT[1:0] = mode; // read only -- set internally
   
-  assign A_vram = A;
-  assign Do_vram = Di_video;
+  assign A_vram = A; // TODO: mux
+  assign Do_vram = Di; // TODO: mux
   
-  assign A_oam = A;
-  assign Do_oam = 8'b0; // tmp
+  assign A_oam = A; // TODO: offset and mux
+  assign Do_oam = 8'b0; // TODO: Di and mux
   
   assign Do =
-    (cs_vram) ? Do_vram :
+    (!cs_vram_n) ? Do_vram :
     (cs_oam) ? Do_oam :
     (cs_reg) ? Do_reg : 8'hFF;
 

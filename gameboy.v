@@ -15,12 +15,12 @@ module gameboy (
   output wire        cs_n,
   
   // Video RAM
-  output wire [15:0] A_video,
-  input  wire  [7:0] Di_video,
-  output wire  [7:0] Do_video,
-  output wire        wr_video_n,
-  output wire        rd_video_n,
-  output wire        cs_video_n,
+  output wire [15:0] A_vram,
+  input  wire  [7:0] Di_vram,
+  output wire  [7:0] Do_vram,
+  output wire        wr_vram_n,
+  output wire        rd_vram_n,
+  output wire        cs_vram_n,
   
   // Video Display
   output wire  [1:0] pixel_data,
@@ -155,51 +155,60 @@ module gameboy (
   // MMU
   //
   
-  wire cs_main;
   wire cs_interrupt;
   wire cs_timer;
   wire cs_video;
   wire cs_sound;
   wire cs_joypad;
   
-  wire[7:0] Do_mmu;
-  wire[7:0] Do_interrupt;
-  wire[7:0] Do_timer;
-  wire[7:0] Do_sound;
-  wire[7:0] Do_joypad;
+  wire  [7:0] Do_mmu;
+  wire  [7:0] Do_interrupt;
+  wire  [7:0] Do_timer;
+  wire  [7:0] Do_sound;
+  wire  [7:0] Do_joypad;
+  
+  wire [15:0] A_ppu;
+  wire  [7:0] Do_ppu;
+  wire  [7:0] Di_ppu;
+  wire        cs_ppu;
   
   memory_controller memory (
     .clock(clock),
     .reset(reset),
+    
+    // CPU <-> MMU
     .A_cpu(A_cpu),
     .Di_cpu(Do_cpu),
     .Do_cpu(Do_mmu),
     .rd_cpu_n(rd_cpu_n),
     .wr_cpu_n(wr_cpu_n),
+    
+    // MMU <-> I/O Registers + External RAMs
     .A(A),
     .Do(Do),
     .Di(Di),
     .wr_n(wr_n),
     .rd_n(rd_n),
-    .cs(cs_main),
-    .A_video(A_video),
-    .Do_video(Do_video),
-    .Di_video(Di_video),
-    .rd_video_n(rd_video_n),
-    .wr_video_n(wr_video_n),
-    .cs_video(cs_video),
+    .cs_n(cs_n),
+    
+    // MMU <-> PPU
+    .A_ppu(A_ppu),
+    .Do_ppu(Do_ppu),
+    .Di_ppu(Di_ppu),
+    .cs_ppu(cs_ppu),
+    
+    // Data lines (I/O Registers) -> MMU
     .Do_interrupt(Do_interrupt),
     .Do_timer(Do_timer),
     .Do_sound(Do_sound),
     .Do_joypad(Do_joypad),
+    
+    // MMU -> Modules (I/O Registers)
     .cs_interrupt(cs_interrupt),
     .cs_timer(cs_timer),
     .cs_sound(cs_sound),
     .cs_joypad(cs_joypad)
   );
-  
-  assign cs_n = !cs_main;
-  assign cs_video_n = !cs_video;
   
   //
   // Interrupt Controller
@@ -226,6 +235,10 @@ module gameboy (
     .Do(Do_interrupt)
   );
   
+  // During an interrupts the CPU reads the jump address
+  //  from a table in memory. It gets the address of this
+  //  table from the interrupt module which is why this
+  //  mux exists.
   assign Di_cpu = (!iorq_n && !m1_n) ? jump_addr : Do_mmu;
   
   //
@@ -249,27 +262,39 @@ module gameboy (
   // Video Controller
   //
   
-  /*
   video_controller video (
     .reset(reset),
     .clock(clock),
+    
+    // Interrupts
     .int_vblank_ack(int_ack[0]),
     .int_vblank_req(int_req[0]),
     .int_lcdc_ack(int_ack[1]),
     .int_lcdc_req(int_req[1]),
-    .A(A_video),
-    .Di(Do_video),
-    .Do(Di_video),
-    .rd_n(rd_video_n),
-    .wr_n(wr_video_n),
-    .cs(cs_video),
+    
+    // PPU <-> MMU
+    .A(A_ppu),
+    .Di(Do_ppu),
+    .Do(Di_ppu),
+    .rd_n(rd_n),
+    .wr_n(wr_n),
+    .cs(cs_ppu),
+    
+    // PPU <-> VRAM
+    .A_vram(A_vram),
+    .Di_vram(Do_vram),
+    .Do_vram(Di_vram),
+    .rd_vram_n(rd_vram_n),
+    .wr_vram_n(wr_vram_n),
+    .cs_vram_n(cs_vram_n),
+    
+    // LCD Output
     .hsync(hsync),
     .vsync(vsync),
     .pixel_data(pixel_data),
     .pixel_latch(pixel_latch)
     //.pixel_clock(clock) // TODO ??
   );
-  */
   
   //
   // Input Controller

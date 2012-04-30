@@ -102,10 +102,10 @@ module s6atlys(
   wire [7:0] Do;
   wire wr_n, rd_n, cs_n;
   
-  wire [15:0] A_video;
-  wire [7:0] Di_video;
-  wire [7:0] Do_video;
-  wire wr_video_n, rd_video_n, cs_video_n;
+  wire [15:0] A_vram;
+  wire [7:0] Di_vram;
+  wire [7:0] Do_vram;
+  wire wr_vram_n, rd_vram_n, cs_vram_n;
   
   wire [1:0] pixel_data;
   wire pixel_clock;
@@ -127,12 +127,12 @@ module s6atlys(
     .wr_n(wr_n),
     .rd_n(rd_n),
     .cs_n(cs_n),
-    .A_video(A_video),
-    .Di_video(Di_video),
-    .Do_video(Do_video),
-    .wr_video_n(wr_video_n),
-    .rd_video_n(rd_video_n),
-    .cs_video_n(cs_video_n),
+    .A_vram(A_vram),
+    .Di_vram(Di_vram),
+    .Do_vram(Do_vram),
+    .wr_vram_n(wr_vram_n),
+    .rd_vram_n(rd_vram_n),
+    .cs_vram_n(cs_vram_n),
     .pixel_data(pixel_data),
     .pixel_clock(pixel_clock),
     .pixel_latch(pixel_latch),
@@ -170,8 +170,9 @@ module s6atlys(
     end
   end
   
+  // TODO: tie these to 8kb RAMs
   assign Di = 8'b0;
-  assign Di_video = 8'b0;
+  assign Di_vram = 8'b0;
   
 endmodule
   
