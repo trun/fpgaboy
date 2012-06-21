@@ -28,7 +28,10 @@ module s6atlys(
   input  wire  [5:0] BTN,
   
   // PMOD Connector
-  inout  wire  [7:0] JB
+  inout  wire  [7:0] JB,
+  
+  // PMOD VmodMIB Connectors
+  inout  wire  [7:0] VHDCIJA
 );
 
   //
@@ -55,21 +58,45 @@ module s6atlys(
   //
   // Clocks (GameBoy clock runs at ~4.194304 MHz)
   // 
-  // FPGABoy runs at 33.5 MHz, mostly to simplify the video controller.
+  // FPGABoy runs at 33.33 MHz, mostly to simplify the video controller.
   //  Certain cycle sensitive modules, such as the CPU and Timer are
   //  internally clocked down to the GameBoy's normal speed.
   //
   
-  // Core Clock: 33.5 MHz (33.3333 MHz)
+  // Core Clock: 33.33 MHz
   wire coreclk, core_clock;
   DCM_SP core_clock_dcm (.CLKIN(CLK_100M), .CLKFX(coreclk), .RST(1'b0));
   defparam core_clock_dcm.CLKFX_DIVIDE = 6;
   defparam core_clock_dcm.CLKFX_MULTIPLY = 2;
-  defparam core_clock_dcm.CLK_FEEDBACK = "NONE";
+  defparam core_clock_dcm.CLKDV_DIVIDE = 3.0;
+  defparam core_clock_dcm.CLKIN_PERIOD = 10.000;
   BUFG core_clock_buf (.I(coreclk), .O(core_clock));
   
   // HDMI Clocks
   //  TODO: No idea what these look like yet.
+  
+  /*
+  // OLED Clock 5.0 MHz (for PmodOLED)
+  wire oledclk, oledsclk, oled_clock;
+  DCM_SP oled_clock_dcm (.CLKIN(CLK_100M), .CLKFX(oledclk), .CLKFX180(oledsclk), .RST(1'b0));
+  defparam oled_clock_dcm.CLKFX_DIVIDE = 20;
+  defparam oled_clock_dcm.CLKFX_MULTIPLY = 2;
+  defparam oled_clock_dcm.CLKDV_DIVIDE = 10.0;
+  defparam oled_clock_dcm.CLKIN_PERIOD = 10.000;
+  defparam oled_clock_dcm.CLKIN_DIVIDE_BY_2 = "TRUE";
+  BUFG oled_clock_buf (.I(oledclk), .O(oled_clock));
+  
+  ODDR2 oled_clock_oddr2(
+    .Q(VHDCIJA[3]),
+    .C0(oledsclk),
+    .C1(oledclk),
+    .D0(1'b1),
+    .D1(1'b0),
+    .CE(1'b1),
+    .S(1'b0),
+    .R(1'b0)
+  );
+  */
   
   // Joypad Clock: 1 KHz
   wire pulse_1khz;
@@ -78,6 +105,15 @@ module s6atlys(
     .reset(reset_init),
     .clock(core_clock),
     .enable(pulse_1khz)
+  );
+  
+  // CLS Clock: 200 Khz
+  wire pulse_200khz;
+  reg  clock_200khz;
+  divider#(.DELAY(166)) div_5us (
+    .reset(reset_init),
+    .clock(core_clock),
+    .enable(pulse_200khz)
   );
   
   //
@@ -96,16 +132,40 @@ module s6atlys(
   
   assign reset = (reset_init || reset_sync);
   
-  //
-  // Buttons
-  //
-  // BTN0-BTN5 - Not Implemented
-  //
-  
   // Game Clock
   wire clock;
   BUFGMUX clock_mux(.S(step_enable), .O(clock),
                     .I0(core_clock), .I1(step_sync));
+  
+  //
+  // Buttons
+  //
+  // BTN0 - OLED Display Shutdown
+  // BTN1-BTN5 - Not Implemented
+  //
+  
+  wire shutdown_sync;
+  debounce debounce_shutdown_sync(reset_init, core_clock, !BTN[0], shutdown_sync);
+           
+  //
+  // PmodOLED Adapter
+  //
+  
+  /*
+  wire [7:0] oled_state;
+  oled_spi oled(
+    .reset(reset),
+    .clock(oled_clock),
+    .shutdown(shutdown_sync),
+    .cs(VHDCIJA[0]),
+    .sdin(VHDCIJA[1]),
+    .dc(VHDCIJA[4]),
+    .res(VHDCIJA[5]),
+    .vbatc(VHDCIJA[6]),
+    .vddc(VHDCIJA[7]),
+    .state(oled_state)
+  );
+  */
   
   //
   // GameBoy
@@ -136,6 +196,14 @@ module s6atlys(
   // GB <-> Audio Adapter
   wire audio_left, audio_right;
   
+  // GB <-> CLS SPI
+  wire [15:0] PC;
+  wire [15:0] SP;
+  wire [15:0] AF;
+  wire [15:0] BC;
+  wire [15:0] DE;
+  wire [15:0] HL;
+  
   gameboy gameboy (
     .clock(clock),
     .reset(reset),
@@ -162,7 +230,13 @@ module s6atlys(
     .audio_left(audio_left),
     .audio_right(audio_right),
     // debug output
-    .dbg_led(LED)
+    .dbg_led(LED),
+    .PC(PC),
+    .SP(SP),
+    .AF(AF),
+    .BC(BC),
+    .DE(DE),
+    .HL(HL)
   );
   
   // Joypad Adapter
@@ -171,27 +245,47 @@ module s6atlys(
     .reset(reset),
     .button_sel(joypad_sel),
     .button_data(joypad_data),
-    .controller_data(JB[0]),
-    .controller_clock(JB[1]),
-    .controller_latch(JB[2])
+    .controller_data(JB[4]),
+    .controller_clock(JB[5]),
+    .controller_latch(JB[6])
+  );
+  
+  cls_spi cls_spi(
+    .clock(clock_200khz),
+    .reset(reset),
+    .ss(JB[0]),
+    .mosi(JB[1]),
+    .miso(JB[2]),
+    .sclk(JB[3]),
+    .A(A),
+    .Di(Di),
+    .Do(Do),
+    .PC(PC),
+    .SP(SP),
+    .AF(AF),
+    .BC(BC),
+    .DE(DE),
+    .HL(HL)
   );
   
   // driver for divider clocks
-  always @(posedge core_clock)
-  begin
-    if (reset_init)
-    begin
+  always @(posedge core_clock) begin
+    if (reset_init) begin
       clock_1khz <= 1'b0;
-    end
-    else if (pulse_1khz)
-    begin
-      clock_1khz <= !clock_1khz;
+      clock_200khz <= 1'b0;
+    end else begin
+      if (pulse_1khz)
+        clock_1khz <= !clock_1khz;
+      if (pulse_200khz)
+        clock_200khz <= !clock_200khz;
     end
   end
   
   // TODO: tie these to 8kb RAMs
   assign Di = 8'b0;
   assign Di_vram = 8'b0;
+  
+  assign VHDCIJA = 8'b0;
   
 endmodule
   

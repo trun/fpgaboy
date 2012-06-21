@@ -28,20 +28,13 @@ module joypad_controller(
   //   Bit 0: 0 <= Right or A
   ////////////////////////////////////////////////
 
-  always @(posedge clock)
-  begin
+  always @(posedge clock) begin
     if (reset)
-    begin
       int_req <= 0;
-    end
-    else
-    begin      
-      if (!wr_n)
-      begin
+    else begin
+      if (!wr_n) begin
         if (A == 16'hFF00)
-        begin
           button_sel <= Di[5:4];
-        end
       end
     end
   end

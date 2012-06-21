@@ -38,7 +38,13 @@ module gameboy (
   output wire        audio_right,
   
   // Debug - CPU Pins
-  output wire  [7:0] dbg_led
+  output wire  [7:0] dbg_led,
+  output wire [15:0] PC,
+  output wire [15:0] SP,
+  output wire [15:0] AF,
+  output wire [15:0] BC,
+  output wire [15:0] DE,
+  output wire [15:0] HL
 );
   
   //assign pixel_data = 2'b0;
@@ -88,12 +94,6 @@ module gameboy (
   // CPU internal registers
   //
   
-  wire [15:0] AF;
-  wire [15:0] BC;
-  wire [15:0] DE;
-  wire [15:0] HL;
-  wire [15:0] PC;
-  wire [15:0] SP;
   wire IntE_FF1;
   wire IntE_FF2;
   wire INT_s;
