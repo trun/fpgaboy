@@ -28,10 +28,7 @@ module s6atlys(
   input  wire  [5:0] BTN,
   
   // PMOD Connector
-  inout  wire  [7:0] JB,
-  
-  // PMOD VmodMIB Connectors
-  inout  wire  [7:0] VHDCIJA
+  inout  wire  [7:0] JB
 );
 
   //
@@ -48,12 +45,6 @@ module s6atlys(
   //assign VGA_B = 0;
   //assign VGA_HSYNC = 0;
   //assign VGA_VSYNC = 0;
-  
-  // Initial Reset
-  wire reset_init, reset;
-  SRL16 reset_sr(.D(1'b0), .CLK(CLK_100M), .Q(reset_init),
-                 .A0(1'b1), .A1(1'b1), .A2(1'b1), .A3(1'b1));
-  defparam reset_sr.INIT = 16'hFFFF;
   
   //
   // Clocks (GameBoy clock runs at ~4.194304 MHz)
@@ -72,31 +63,13 @@ module s6atlys(
   defparam core_clock_dcm.CLKIN_PERIOD = 10.000;
   BUFG core_clock_buf (.I(coreclk), .O(core_clock));
   
+  // Initial Reset
+  wire reset_init, reset;
+  SRL16 reset_sr(.D(1'b0), .CLK(core_clock), .Q(reset_init),
+                 .A0(1'b1), .A1(1'b1), .A2(1'b1), .A3(1'b1));
+  
   // HDMI Clocks
   //  TODO: No idea what these look like yet.
-  
-  /*
-  // OLED Clock 5.0 MHz (for PmodOLED)
-  wire oledclk, oledsclk, oled_clock;
-  DCM_SP oled_clock_dcm (.CLKIN(CLK_100M), .CLKFX(oledclk), .CLKFX180(oledsclk), .RST(1'b0));
-  defparam oled_clock_dcm.CLKFX_DIVIDE = 20;
-  defparam oled_clock_dcm.CLKFX_MULTIPLY = 2;
-  defparam oled_clock_dcm.CLKDV_DIVIDE = 10.0;
-  defparam oled_clock_dcm.CLKIN_PERIOD = 10.000;
-  defparam oled_clock_dcm.CLKIN_DIVIDE_BY_2 = "TRUE";
-  BUFG oled_clock_buf (.I(oledclk), .O(oled_clock));
-  
-  ODDR2 oled_clock_oddr2(
-    .Q(VHDCIJA[3]),
-    .C0(oledsclk),
-    .C1(oledclk),
-    .D0(1'b1),
-    .D1(1'b0),
-    .CE(1'b1),
-    .S(1'b0),
-    .R(1'b0)
-  );
-  */
   
   // Joypad Clock: 1 KHz
   wire pulse_1khz;
@@ -126,8 +99,8 @@ module s6atlys(
   //
   
   wire reset_sync, step_sync, step_enable;
-  debounce debounce_step_sync(reset_init, core_clock, !SW[5], step_sync);
-  debounce debounce_step_enable(reset_init, core_clock, !SW[6], step_enable);
+  debounce debounce_step_sync(reset_init, core_clock, SW[5], step_sync);
+  debounce debounce_step_enable(reset_init, core_clock, SW[6], step_enable);
   debounce debounce_reset_sync(reset_init, core_clock, !SW[7], reset_sync);
   
   assign reset = (reset_init || reset_sync);
@@ -144,28 +117,8 @@ module s6atlys(
   // BTN1-BTN5 - Not Implemented
   //
   
-  wire shutdown_sync;
-  debounce debounce_shutdown_sync(reset_init, core_clock, !BTN[0], shutdown_sync);
-           
-  //
-  // PmodOLED Adapter
-  //
-  
-  /*
-  wire [7:0] oled_state;
-  oled_spi oled(
-    .reset(reset),
-    .clock(oled_clock),
-    .shutdown(shutdown_sync),
-    .cs(VHDCIJA[0]),
-    .sdin(VHDCIJA[1]),
-    .dc(VHDCIJA[4]),
-    .res(VHDCIJA[5]),
-    .vbatc(VHDCIJA[6]),
-    .vddc(VHDCIJA[7]),
-    .state(oled_state)
-  );
-  */
+  //wire shutdown_sync;
+  //debounce debounce_shutdown_sync(reset_init, core_clock, !BTN[0], shutdown_sync);
   
   //
   // GameBoy
@@ -239,12 +192,45 @@ module s6atlys(
     .HL(HL)
   );
   
+  // Internal ROMs and RAMs
+  reg [7:0] tetris_rom [0:32767];
+  
+  initial begin
+    $readmemh("data/tetris.rom", tetris_rom, 0, 32768);
+  end
+  
+  wire [7:0] Di_wram;
+  
+  // WRAM
+  async_mem #(.asz(8), .depth(8192)) wram (
+    .rd_data(Di_wram),
+    .wr_clk(clock),
+    .wr_data(Do),
+    .wr_cs(!cs_n && !wr_n),
+    .addr(A),
+    .rd_cs(!cs_n && !rd_n)
+  );
+  
+  // VRAM
+  async_mem #(.asz(8), .depth(8192)) vram (
+    .rd_data(Di_vram),
+    .wr_clk(clock),
+    .wr_data(Do_vram),
+    .wr_cs(!cs_vram_n && !wr_vram_n),
+    .addr(A_vram),
+    .rd_cs(!cs_vram_n && !rd_vram_n)
+  );
+  
+  assign Di = A[14] ? Di_wram : tetris_rom[A];
+  
   // Joypad Adapter
+  wire [15:0] button_state;
   joypad_snes_adapter joypad_adapter(
     .clock(clock_1khz),
     .reset(reset),
     .button_sel(joypad_sel),
     .button_data(joypad_data),
+    .button_state(button_state),
     .controller_data(JB[4]),
     .controller_clock(JB[5]),
     .controller_latch(JB[6])
@@ -281,12 +267,6 @@ module s6atlys(
     end
   end
   
-  // TODO: tie these to 8kb RAMs
-  assign Di = 8'b0;
-  assign Di_vram = 8'b0;
-  
-  assign VHDCIJA = 8'b0;
-  
 endmodule
   
 ////////////////////////////////////////////////////////////////////////////////
@@ -300,7 +280,7 @@ endmodule
 ////////////////////////////////////////////////////////////////////////////////
 
 module debounce (reset, clock, noisy, clean);
-  parameter DELAY = 1000000;   // .01 sec with a 100Mhz clock
+  parameter DELAY = 333333;   // .01 sec with a 33.3333Mhz clock
   input reset, clock, noisy;
   output clean;
   

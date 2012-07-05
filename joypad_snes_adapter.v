@@ -7,6 +7,7 @@ module joypad_snes_adapter(
   // to gameboy
   input  wire  [1:0] button_sel,
   output wire  [3:0] button_data,
+  output reg  [15:0] button_state,
   // to controller
   input  wire        controller_data,
   output wire        controller_latch,
@@ -37,7 +38,7 @@ module joypad_snes_adapter(
 
   reg   [1:0] state;
   reg   [3:0] button_index;
-  reg  [15:0] button_state;
+  //reg  [15:0] button_state;
   
   /**
    * State transitions occur on the clock's positive edge.

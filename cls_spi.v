@@ -205,7 +205,7 @@ module cls_spi(
       
       else if (state == LOOP_3) begin
         data_idx <= data_idx + 1;
-        wait_max <= 10;
+        wait_max <= 1000;
         state <= WAIT;
         next_state <= LOOP_2;
       end
