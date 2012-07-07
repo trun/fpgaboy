@@ -3,6 +3,7 @@
 
 module gameboy (
   input  wire        clock,
+  input  wire        cpu_clock,
   input  wire        reset,
   input  wire        reset_init,
   
@@ -44,7 +45,10 @@ module gameboy (
   output wire [15:0] AF,
   output wire [15:0] BC,
   output wire [15:0] DE,
-  output wire [15:0] HL
+  output wire [15:0] HL,
+  output wire [15:0] A_cpu,
+  output wire  [7:0] Di_cpu,
+  output wire  [7:0] Do_cpu
 );
   
   //assign pixel_data = 2'b0;
@@ -62,9 +66,6 @@ module gameboy (
   
   wire reset_n, wait_n, int_n, nmi_n, busrq_n; // cpu inputs
   wire m1_n, mreq_n, iorq_n, rd_cpu_n, wr_cpu_n, rfsh_n, halt_n, busak_n; // cpu outputs
-  wire [15:0] A_cpu;
-  wire [7:0] Di_cpu;
-  wire [7:0] Do_cpu;
   
   //
   // Debug - CPU I/O Pins
@@ -80,15 +81,6 @@ module gameboy (
     rd_n,
     wr_n
   };
-  
-  //
-  // CPU clock
-  //
-  
-  reg [2:0] clock_divider; // overflows every 8 cycles
-  
-  wire cpu_clock; 
-  BUFG cpu_clock_buf(.I(clock_divider[2]), .O(cpu_clock));
   
   //
   // CPU internal registers
@@ -299,21 +291,5 @@ module gameboy (
     .button_sel(joypad_sel),
     .button_data(joypad_data)
   );
-  
-  //
-  // Advance CPU Clock
-  //
-  
-  always @(posedge clock)
-  begin
-    if (reset_init)
-    begin
-      clock_divider <= 0;
-    end
-    else
-    begin
-      clock_divider <= clock_divider + 1;
-    end
-  end
 
 endmodule

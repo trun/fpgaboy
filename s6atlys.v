@@ -90,6 +90,15 @@ module s6atlys(
   );
   
   //
+  // CPU clock - overflows every 8 cycles
+  //
+  
+  reg [2:0] clock_divider;
+  
+  wire cpu_clock; 
+  BUFG cpu_clock_buf(.I(clock_divider[2]), .O(cpu_clock));
+  
+  //
   // Switches
   //   
   //   SW0-SW4 - Breakpoints Switches (Not Implemented)
@@ -162,9 +171,13 @@ module s6atlys(
   wire [15:0] BC;
   wire [15:0] DE;
   wire [15:0] HL;
+  wire [15:0] A_cpu;
+  wire  [7:0] Di_cpu;
+  wire  [7:0] Do_cpu;
   
   gameboy gameboy (
     .clock(clock),
+    .cpu_clock(cpu_clock),
     .reset(reset),
     .reset_init(reset_init),
     .A(A),
@@ -195,14 +208,17 @@ module s6atlys(
     .AF(AF),
     .BC(BC),
     .DE(DE),
-    .HL(HL)
+    .HL(HL),
+    .A_cpu(A_cpu),
+    .Di_cpu(Di_cpu),
+    .Do_cpu(Do_cpu)
   );
   
   // Internal ROMs and RAMs
   reg [7:0] tetris_rom [0:32767];
   
   initial begin
-    $readmemh("data/tetris.rom", tetris_rom, 0, 32768);
+    $readmemh("data/tetris.rom", tetris_rom, 0, 32767);
   end
   
   wire [7:0] Di_wram;
@@ -250,9 +266,9 @@ module s6atlys(
     .mosi(JB[1]),
     .miso(JB[2]),
     .sclk(JB[3]),
-    .A(A),
-    .Di(Di),
-    .Do(Do),
+    .A(A_cpu),
+    .Di(Di_cpu),
+    .Do(Do_cpu),
     .PC(PC),
     .SP(SP),
     .AF(AF),
@@ -272,12 +288,24 @@ module s6atlys(
         clock_1khz <= !clock_1khz;
       if (pulse_200khz)
         clock_200khz <= !clock_200khz;
+        
       if (mode0_sync)
         mode <= 2'b00;
-      if (mode1_sync)
+      else if (mode1_sync)
         mode <= 2'b01;
-      if (mode2_sync)
+      else if (mode2_sync)
         mode <= 2'b10;
+    end
+  end
+  
+  always @(posedge clock) begin
+    if (reset_init) begin
+      clock_divider <= 1'b0;
+    end else begin
+      if (step_enable)
+        clock_divider <= clock_divider + 4;
+      else
+        clock_divider <= clock_divider + 1;
     end
   end
   
