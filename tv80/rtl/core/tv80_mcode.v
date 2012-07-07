@@ -787,7 +787,7 @@ module tv80_mcode
                           begin
                             Jump = 1'b1;
                             IncDec_16 = 4'b0111;
-                            //I_RETN = 1'b1; // GameBoy -- Remove to reenable FF1
+                            I_RETN = 1'b1; // GameBoy -- Remove to reenable FF1
                             SetEI = 1'b1;
                           end
                         default :;
