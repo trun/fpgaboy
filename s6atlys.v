@@ -113,12 +113,18 @@ module s6atlys(
   //
   // Buttons
   //
-  // BTN0 - OLED Display Shutdown
-  // BTN1-BTN5 - Not Implemented
+  // BTN0 - Not Implemented
+  // BTN1 - Not Implemented
+  // BTN2 - PC SP
+  // BTN3 - AF BC
+  // BTN4 - DE HL
   //
   
-  //wire shutdown_sync;
-  //debounce debounce_shutdown_sync(reset_init, core_clock, !BTN[0], shutdown_sync);
+  reg [1:0] mode;
+  wire mode0_sync, mode1_sync, mode2_sync;
+  debounce debounce_mode0_sync(reset_init, core_clock, BTN[2], mode0_sync);
+  debounce debounce_mode1_sync(reset_init, core_clock, BTN[3], mode1_sync);
+  debounce debounce_mode2_sync(reset_init, core_clock, BTN[4], mode2_sync);
   
   //
   // GameBoy
@@ -239,6 +245,7 @@ module s6atlys(
   cls_spi cls_spi(
     .clock(clock_200khz),
     .reset(reset),
+    .mode(mode),
     .ss(JB[0]),
     .mosi(JB[1]),
     .miso(JB[2]),
@@ -254,16 +261,23 @@ module s6atlys(
     .HL(HL)
   );
   
-  // driver for divider clocks
+  // driver for divider clocks and debug elements
   always @(posedge core_clock) begin
     if (reset_init) begin
       clock_1khz <= 1'b0;
       clock_200khz <= 1'b0;
+      mode <= 2'b0;
     end else begin
       if (pulse_1khz)
         clock_1khz <= !clock_1khz;
       if (pulse_200khz)
         clock_200khz <= !clock_200khz;
+      if (mode0_sync)
+        mode <= 2'b00;
+      if (mode1_sync)
+        mode <= 2'b01;
+      if (mode2_sync)
+        mode <= 2'b10;
     end
   end
   

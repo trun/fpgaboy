@@ -14,6 +14,7 @@ module cls_spi(
   input wire [15:0] BC,
   input wire [15:0] DE,
   input wire [15:0] HL,
+  input wire  [1:0] mode,
   
   output wire       ss,
   output reg        mosi,
@@ -37,6 +38,14 @@ module cls_spi(
   parameter LOOP_1  = 20;
   parameter LOOP_2  = 21;
   parameter LOOP_3  = 22;
+  parameter LOOP_4  = 23;
+  parameter LOOP_5  = 24;
+  parameter LOOP_6  = 25;
+  parameter LOOP_7  = 26;
+  parameter LOOP_8  = 27;
+  parameter LOOP_9  = 28;
+  parameter LOOP_10  = 29;
+  parameter LOOP_11  = 30;
   
   reg [63:0] send_buf; // send buffer (8 bytes)
   reg  [2:0] send_idx; // current bit   (0h-7h)
@@ -47,6 +56,7 @@ module cls_spi(
   reg [31:0] wait_max; // total cycles
   
   reg  [2:0] hex_idx;  // current word
+  reg  [1:0] mode_latch; // 0-PCSP, 1-AFBC, 2-DEHL
   
   // TODO probably don't need 7 bits for state
   reg [7:0] state;
@@ -76,6 +86,7 @@ module cls_spi(
       state <= STARTUP_1;
       next_state <= 8'b0;
       next_state_hex <= 8'b0;
+      mode_latch <= 2'b0;
       
       hex_idx <= 3'b0;
       data <= 32'b0;
@@ -189,25 +200,92 @@ module cls_spi(
         send_max <= 5;
         state <= SEND;
         next_state <= LOOP_2;
+        mode_latch <= mode;
       end
       
       else if (state == LOOP_2) begin
-        case (data_idx)
-          2'b00: data <= { A, Di, Do };
-          2'b01: data <= { PC, SP };
-          2'b10: data <= { AF, BC };
-          2'b11: data <= { DE, HL };
-        endcase
-        hex_idx <= 7;
-        state <= SENDHEX;
-        next_state_hex <= LOOP_3;
+        send_buf <= 24'h3A4120; //  A:
+        send_max <= 2;
+        state <= SEND;
+        next_state <= LOOP_3;
       end
       
       else if (state == LOOP_3) begin
-        data_idx <= data_idx + 1;
-        wait_max <= 1000;
+        data <= A;
+        hex_idx <= 3;
+        state <= SENDHEX;
+        next_state_hex <= LOOP_4;
+      end
+      
+      else if (state == LOOP_4) begin
+        send_buf <= 32'h3A4f4920; //  IO:
+        send_max <= 3;
+        state <= SEND;
+        next_state <= LOOP_5;
+      end
+      
+      else if (state == LOOP_5) begin
+        data <= { Di, Do };
+        hex_idx <= 3;
+        state <= SENDHEX;
+        next_state_hex <= LOOP_6;
+      end
+      
+      else if (state == LOOP_6) begin
+        send_buf <= 48'h48303B315B1B; // ESC  BRACKET '1' ';' '0' 'H'
+        send_max <= 5;
+        state <= SEND;
+        next_state <= LOOP_7;
+      end
+      
+      else if (state == LOOP_7) begin
+        case (mode_latch)
+          2'b00: send_buf <= 24'h3A4350; // PC:
+          2'b01: send_buf <= 24'h3A4641; // AF:
+          2'b10: send_buf <= 24'h3A4544; // DE:
+        endcase
+        send_max <= 2;
+        state <= SEND;
+        next_state <= LOOP_8;
+      end
+      
+      else if (state == LOOP_8) begin
+        case (mode_latch)
+          2'b00: data <= PC;
+          2'b01: data <= AF;
+          2'b10: data <= DE;
+        endcase
+        hex_idx <= 3;
+        state <= SENDHEX;
+        next_state_hex <= LOOP_9;
+      end
+      
+      else if (state == LOOP_9) begin
+        case (mode_latch)
+          2'b00: send_buf <= 32'h3A505320; //  SP:
+          2'b01: send_buf <= 32'h3A434220; //  BC:
+          2'b10: send_buf <= 32'h3A4C4820; //  HL:
+        endcase
+        send_max <= 3;
+        state <= SEND;
+        next_state <= LOOP_10;
+      end
+      
+      else if (state == LOOP_10) begin
+        case (mode_latch)
+          2'b00: data <= SP;
+          2'b01: data <= BC;
+          2'b10: data <= HL;
+        endcase
+        hex_idx <= 3;
+        state <= SENDHEX;
+        next_state_hex <= LOOP_11;
+      end
+      
+      else if (state == LOOP_11) begin
+        wait_max <= 10;
         state <= WAIT;
-        next_state <= LOOP_2;
+        next_state <= LOOP_1;
       end
     end
   end
