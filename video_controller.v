@@ -196,18 +196,146 @@ module video_controller (
   
   reg[3:0] state;
   parameter IDLE_STATE = 0;
-
-  reg   [7:0] Do_reg;
+  
+  parameter BG_ADDR_STATE = 1;
+  parameter BG_ADDR_WAIT_STATE = 2;
+  parameter BG_DATA_STATE = 3;
+  parameter BG_DATA_WAIT_STATE = 4;
+  parameter BG_PIXEL_COMPUTE_STATE = 8;
+  parameter BG_PIXEL_READ_STATE = 9;
+  parameter BG_PIXEL_WAIT_STATE = 10;
+  parameter BG_PIXEL_WRITE_STATE = 11;
+  parameter BG_PIXEL_HOLD_STATE = 12;
+  
+  parameter SPRITE_POS_STATE = 13;
+  parameter SPRITE_POS_WAIT_STATE = 14;
+  parameter SPRITE_ATTR_STATE = 15;
+  parameter SPRITE_ATTR_WAIT_STATE = 16;
+  parameter SPRITE_DATA_STATE = 17;
+  parameter SPRITE_DATA_WAIT_STATE = 18;
+  parameter SPRITE_PIXEL_COMPUTE_STATE = 19;
+  parameter SPRITE_PIXEL_READ_STATE = 20;
+  parameter SPRITE_PIXEL_WAIT_STATE = 21;
+  parameter SPRITE_PIXEL_DRAW_STATE = 22;
+  parameter SPRITE_PIXEL_DATA_STATE = 23;
+  parameter SPRITE_WRITE_STATE = 24;
+  parameter SPRITE_HOLD_STATE = 25;
+  
+  parameter PIXEL_WAIT_STATE = 26;
+  parameter PIXEL_READ_STATE = 27;
+  parameter PIXEL_READ_WAIT_STATE = 28;
+  parameter PIXEL_OUT_STATE = 29;
+  parameter PIXEL_OUT_HOLD_STATE = 30;
+  parameter PIXEL_INCREMENT_STATE = 31;
   
   wire  [7:0] next_line_count;
   wire  [8:0] next_pixel_count;
   
-  wire  [7:0] A_oam;
-  wire  [7:0] Do_oam;
-  wire        wr_oam_n;
+  reg   [7:0] tile_x_pos;
+  reg   [7:0] tile_y_pos;
+  reg   [4:0] tile_byte_pos1;
+  reg   [4:0] tile_byte_pos2;
+  reg   [3:0] tile_byte_offset1;
+  reg   [3:0] tile_byte_offset2;
+  reg   [7:0] tile_data1;
+  reg   [7:0] tile_data2;
+  reg render_background;
+  
+  reg   [7:0] sprite_x_pos;
+  reg   [7:0] sprite_y_pos;
+  reg   [7:0] sprite_data1;
+  reg   [7:0] sprite_data2;
+  reg   [7:0] sprite_location;
+  reg   [7:0] sprite_attributes;
+  reg   [1:0] sprite_pixel;
+  reg   [1:0] bg_pixel;
+  reg   [2:0] sprite_pixel_num;
+  reg   [7:0] sprite_palette;
+  reg   [4:0] sprite_y_size;
+  
+  reg   [4:0] tile_col_num; // increments from 0 -> 31
+  reg   [6:0] sprite_num; // increments from 0 -> 39
+  
+  // OAM
+  
+  reg   [7:0] oam_addrA, oam_addrB;
+  wire  [7:0] oam_outA, oam_outB;
+  wire        wr_oam;
   wire        cs_oam;
   
+  async_mem2 #(.asz(8), .depth(160)) oam (
+    .clkA(clock),
+    .clkB(clock),
+    .addrA(oam_addrA),
+    .addrB(oam_addrB),
+    .rd_dataA(oam_outA),
+    .rd_dataB(oam_outB),
+    .wr_dataA(Di),
+    .wr_csA(wr_oam)
+  );
+  
+  // VRAM
+  
+  reg  [12:0] vram_addrA, vram_addrB;
+  wire  [7:0] vram_outA, vram_outB;
+  wire        wr_vram;
+  wire        cs_vram;
+  
+  async_mem2 #(.asz(13), .depth(8192)) vram (
+    .clkA(clock),
+    .clkB(clock),
+    .addrA(vram_addrA),
+    .addrB(vram_addrB),
+    .rd_dataA(vram_outA),
+    .rd_dataB(vram_outB),
+    .wr_dataA(Di),
+    .wr_csA(wr_vram)
+  );
+  
+  // Scanlines
+  
+  reg   [4:0] scanline1_addrA, scanline1_addrB;
+  reg   [7:0] scanline1_inA, scanline1_inB;
+  wire  [7:0] scanline1_outA, scanline1_outB;
+  reg         wr_scanline1;
+  
+  async_mem2 #(.asz(5), .depth(20)) scanline1 (
+    .clkA(clock),
+    .clkB(clock),
+    .addrA(scanline1_addrA),
+    .addrB(scanline1_addrB),
+    .rd_dataA(scanline1_outA),
+    .rd_dataB(scanline1_outB),
+    .wr_dataA(scanline1_inA),
+    .wr_dataB(scanline1_inB),
+    .wr_csA(wr_scanline1),
+    .wr_csB(wr_scanline1)
+  );
+  
+  reg   [4:0] scanline2_addrA, scanline2_addrB;
+  reg   [7:0] scanline2_inA, scanline2_inB;
+  wire  [7:0] scanline2_outA, scanline2_outB;
+  reg         wr_scanline2;
+  
+  async_mem2 #(.asz(5), .depth(20)) scanline2 (
+    .clkA(clock),
+    .clkB(clock),
+    .addrA(scanline2_addrA),
+    .addrB(scanline2_addrB),
+    .rd_dataA(scanline2_outA),
+    .rd_dataB(scanline2_outB),
+    .wr_dataA(scanline2_inA),
+    .wr_dataB(scanline2_inB),
+    .wr_csA(wr_scanline2),
+    .wr_csB(wr_scanline2)
+  );
+  
+  // Registers
+  
+  reg   [7:0] Do_reg;
   wire        cs_reg;
+  
+  // Clock -> CPU Clock Divider
   
   wire clock_enable;
   divider #(8) clock_divider(reset, clock, clock_enable);
@@ -335,18 +463,133 @@ module video_controller (
         /////////////////////
         
         case (state)
-          IDLE_STATE:
-          begin
-            if (mode == RAM_LOCK_MODE)
-            begin
-              // do nothing
+          IDLE_STATE: begin
+            if (mode == RAM_LOCK_MODE) begin
+              tile_col_num <= 0;
+              sprite_num <= 0;
+              pixel_data_count <= 0;
+              state <= BG_ADDR_STATE;
             end
           end
+          
+          // BACKGROUND
+          
+          BG_ADDR_STATE: begin
+            // disable writes
+            wr_scanline1 <= 0;
+            wr_scanline2 <= 0;
+            
+            // enable window
+            if (LCDC[5] && WY < line_count) begin
+              tile_x_pos <= { tile_col_num, 3'b0 } + (WX - 7);
+              tile_y_pos <= line_count - WY;
+              vram_addrA <= { (line_count - WY) >> 3, 5'b0 } +
+                (({tile_col_num, 3'b0} + (WX - 7)) >> 3) +
+                ((LCDC[6]) ? 16'h1C00 : 16'h1800);
+              render_background <= 1;
+              state <= BG_ADDR_WAIT_STATE;
+            end
+            
+            // enable background
+            else if (LCDC[0]) begin
+              tile_x_pos <= { tile_col_num, 3'b0 } + SCX;
+              tile_y_pos <= SCY + line_count;
+              vram_addrA <= { (SCY + line_count) >> 3, 5'b0 } +
+                (({tile_col_num, 3'b0} + (SCX)) >> 3) +
+                ((LCDC[3]) ? 16'h1C00 : 16'h1800);
+              render_background <= 1;
+              state <= BG_ADDR_WAIT_STATE;
+            end
+            
+            else begin
+              tile_x_pos <= { tile_col_num, 3'b0 };
+              tile_y_pos <= line_count;
+              render_background <= 0;
+              state <= BG_PIXEL_COMPUTE_STATE;
+            end
+          end
+          
+          BG_ADDR_WAIT_STATE: begin
+            state <= BG_DATA_STATE;
+          end
+          
+          BG_DATA_STATE: begin
+            vram_addrA <=
+              LCDC[4] ? 16'h0000 + { vram_outA, 4'b0 } + { tile_y_pos[2:0], 1'b0 } :
+              { vram_outA, 4'b0 } + { tile_y_pos[2:0], 1'b0 } < 128 ?
+                16'h1000 + { vram_outA, 4'b0 } + { tile_y_pos[2:0], 1'b0 } :
+              16'h1000 - (~({ vram_outA, 4'b0 } + { tile_y_pos[2:0], 1'b0 }) + 1);
+            vram_addrB <=
+              LCDC[4] ? 16'h0000 + { vram_outA, 4'b0 } + { tile_y_pos[2:0], 1'b0 } + 1 :
+              { vram_outA, 4'b0 } + { tile_y_pos[2:0], 1'b0 } + 1 < 128 ?
+                16'h1000 + { vram_outA, 4'b0 } + { tile_y_pos[2:0], 1'b0 } + 1 :
+              16'h1000 - (~({ vram_outA, 4'b0 } + { tile_y_pos[2:0], 1'b0 } + 1) + 1);
+            state <= BG_DATA_WAIT_STATE;
+          end
+          
+          BG_DATA_WAIT_STATE: begin
+            state <= BG_PIXEL_COMPUTE_STATE;
+          end
+          
+          BG_PIXEL_COMPUTE_STATE: begin
+            tile_data1 <= vram_outA;
+            tile_data2 <= vram_outB;
+            tile_byte_pos1 <= tile_x_pos >> 3;
+            tile_byte_pos2 <= ((tile_x_pos + 8) & 8'hFF) >> 3;
+            tile_byte_offset1 <= tile_x_pos[2:0];
+            tile_byte_offset2 <= 8 - tile_x_pos[2:0];
+            state <= BG_PIXEL_READ_STATE;
+          end
+          
+          BG_PIXEL_READ_STATE: begin
+            scanline1_addrA <= tile_byte_pos1;
+            scanline1_addrB <= tile_byte_pos2;
+            scanline2_addrA <= tile_byte_pos1;
+            scanline2_addrB <= tile_byte_pos2;
+            state <= BG_PIXEL_WAIT_STATE;
+          end
+          
+          BG_PIXEL_WAIT_STATE: begin
+            state <= BG_PIXEL_WRITE_STATE;
+          end
+          
+          BG_PIXEL_WRITE_STATE: begin
+            // first byte
+            scanline1_inA <=
+              render_background ? scanline1_outA & (8'hFF << tile_byte_offset2) |
+                (tile_data1 >> tile_byte_offset1) : 0;
+            scanline2_inA <=
+              render_background ? scanline2_outA & (8'hFF << tile_byte_offset2) |
+                (tile_data2 >> tile_byte_offset1) : 0;
+            
+            // second byte
+            scanline1_inB <=
+              render_background ? scanline1_outB & ~(8'hFF << tile_byte_offset2) |
+                (tile_data1 << tile_byte_offset2) : 0;
+            scanline2_inB <=
+              render_background ? scanline2_outB & ~(8'hFF << tile_byte_offset2) |
+                (tile_data2 << tile_byte_offset2) : 0;
+                
+            // enable writes
+            wr_scanlineA <= tile_byte_pos1 < 20 ? 1 : 0;
+            wr_scanlineB <= tile_byte_pos2 < 20 ? 1 : 0;
+            
+            state <= BG_PIXEL_HOLD_STATE;
+          end
+          
+          BG_PIXEL_HOLD_STATE: begin
+            // increment col
+            if (tile_col_num == 31)
+              state <= SPRITE_POS_STATE;
+            else begin
+              tile_col_num <= tile_col_num + 1;
+              state <= BG_ADDR_STATE;
+            end
+          end
+          
         endcase
         
-      end
-      else
-      begin
+      end else begin
         mode <= HBLANK_MODE;
       end
       
@@ -354,49 +597,42 @@ module video_controller (
       //if (mode != RAM_LOCK_MODE && state < PIXEL_WAIT_STATE && state > IDLE_STATE)
       //  state <= PIXEL_WAIT_STATE;
       
-      //if (mode < RAM_LOCK_MODE)
-      //  vram_addrA <= A - 16'h8000;
-      //if (mode < OAM_LOCK_MODE)
-      //  oam_addrA <= A - 16'hFE00;
+      if (mode < RAM_LOCK_MODE)
+        vram_addrA <= A - 16'h8000;
+      if (mode < OAM_LOCK_MODE)
+        oam_addrA <= A - 16'hFE00;
       
-      if (clock_enable)
-      begin
+      if (clock_enable) begin
         pixel_count <= next_pixel_count;
         line_count <= next_line_count;
       end
     end
   end
 
-  assign next_pixel_count = (LCDC[7]) ?
-    ((pixel_count == PIXELS - 1) ? 0 : pixel_count + 1) : 0;
+  assign next_pixel_count = 
+    LCDC[7] ? (pixel_count == PIXELS - 1 ? 0 : pixel_count + 1) : 0;
     
-  assign next_line_count = (LCDC[7]) ?
-    ((pixel_count == PIXELS - 1) ?
-      ((line_count == LINES - 1) ? 0 : line_count + 1) : line_count) : 0;
+  assign next_line_count =
+    LCDC[7] ? (pixel_count == PIXELS - 1 ?
+      (line_count == LINES - 1 ? 0 : line_count + 1) : line_count) : 0;
   
   assign hsync = (pixel_count > OAM_ACTIVE + RAM_ACTIVE + HACTIVE_VIDEO) ? 1'b1 : 1'b0;
   assign vsync = (line_count > VACTIVE_VIDEO) ? 1'b1 : 1'b0;
   
-  assign cs_vram_n = !(cs && A >= 16'h8000 && A < 16'hA000);
+  assign cs_vram = cs && A >= 16'h8000 && A < 16'hA000;
   assign cs_oam = cs && A >= 16'hFE00 && A < 16'hFEA0;
   assign cs_reg = cs && cs_vram_n && !cs_oam;
   
-  assign wr_vram_n = !(cs_oam && !wr_n && mode != RAM_LOCK_MODE);
-  assign wr_oam_n = !(cs_oam && !wr_n && mode != RAM_LOCK_MODE && mode != OAM_LOCK_MODE);
+  assign wr_vram = cs_oam && !wr_n && mode != RAM_LOCK_MODE;
+  assign wr_oam = cs_oam && !wr_n && mode != RAM_LOCK_MODE && mode != OAM_LOCK_MODE;
   
   assign STAT[7:3] = STAT_w[4:0]; // r/w
   assign STAT[2] = (line_count == LYC) ? 1 : 0; // LYC Coincidence flag
   assign STAT[1:0] = mode; // read only -- set internally
   
-  assign A_vram = A; // TODO: mux
-  assign Do_vram = Di; // TODO: mux
-  
-  assign A_oam = A; // TODO: offset and mux
-  assign Do_oam = 8'b0; // TODO: Di and mux
-  
   assign Do =
-    (!cs_vram_n) ? Do_vram :
-    (cs_oam) ? Do_oam :
+    (cs_vram) ? vram_outA :
+    (cs_oam) ? oam_outA :
     (cs_reg) ? Do_reg : 8'hFF;
 
 endmodule
