@@ -123,17 +123,18 @@ module s6atlys(
   // Buttons
   //
   // BTN0 - Not Implemented
-  // BTN1 - Not Implemented
+  // BTN1 - Joypad
   // BTN2 - PC SP
   // BTN3 - AF BC
   // BTN4 - DE HL
   //
   
   reg [1:0] mode;
-  wire mode0_sync, mode1_sync, mode2_sync;
+  wire mode0_sync, mode1_sync, mode2_sync, mode3_sync;
   debounce debounce_mode0_sync(reset_init, core_clock, BTN[2], mode0_sync);
   debounce debounce_mode1_sync(reset_init, core_clock, BTN[3], mode1_sync);
   debounce debounce_mode2_sync(reset_init, core_clock, BTN[4], mode2_sync);
+  debounce debounce_mode3_sync(reset_init, core_clock, BTN[1], mode3_sync);
   
   //
   // GameBoy
@@ -246,13 +247,13 @@ module s6atlys(
   assign Di = A[14] ? Di_wram : tetris_rom[A];
   
   // Joypad Adapter
-  wire [15:0] button_state;
+  wire [15:0] joypad_state;
   joypad_snes_adapter joypad_adapter(
     .clock(clock_1khz),
     .reset(reset),
     .button_sel(joypad_sel),
     .button_data(joypad_data),
-    .button_state(button_state),
+    .button_state(joypad_state),
     .controller_data(JB[4]),
     .controller_clock(JB[5]),
     .controller_latch(JB[6])
@@ -274,7 +275,8 @@ module s6atlys(
     .AF(AF),
     .BC(BC),
     .DE(DE),
-    .HL(HL)
+    .HL(HL),
+    .joypad_state(joypad_state)
   );
   
   // driver for divider clocks and debug elements
@@ -295,6 +297,8 @@ module s6atlys(
         mode <= 2'b01;
       else if (mode2_sync)
         mode <= 2'b10;
+      else if (mode3_sync)
+        mode <= 2'b11;
     end
   end
   

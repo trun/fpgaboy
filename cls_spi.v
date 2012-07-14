@@ -14,6 +14,7 @@ module cls_spi(
   input wire [15:0] BC,
   input wire [15:0] DE,
   input wire [15:0] HL,
+  input wire [15:0] joypad_state,
   input wire  [1:0] mode,
   
   output wire       ss,
@@ -29,6 +30,7 @@ module cls_spi(
   parameter SEND_4 = 5;
   parameter SEND_5 = 6;
   parameter SENDHEX = 7;
+  parameter SENDJOYPAD = 8;
   
   parameter STARTUP_1  = 10;
   parameter STARTUP_2  = 11;
@@ -46,6 +48,8 @@ module cls_spi(
   parameter LOOP_9  = 28;
   parameter LOOP_10  = 29;
   parameter LOOP_11  = 30;
+  parameter LOOP_7b = 31;
+  parameter LOOP_8b = 32;
   
   reg [63:0] send_buf; // send buffer (8 bytes)
   reg  [2:0] send_idx; // current bit   (0h-7h)
@@ -56,12 +60,14 @@ module cls_spi(
   reg [31:0] wait_max; // total cycles
   
   reg  [2:0] hex_idx;  // current word
+  reg  [3:0] btn_idx;  // current joypad button
   reg  [1:0] mode_latch; // 0-PCSP, 1-AFBC, 2-DEHL
   
   // TODO probably don't need 7 bits for state
   reg [7:0] state;
   reg [7:0] next_state;
   reg [7:0] next_state_hex;
+  reg [7:0] next_state_btn;
   
   reg ss_enable;
   reg sclk_enable;
@@ -86,9 +92,11 @@ module cls_spi(
       state <= STARTUP_1;
       next_state <= 8'b0;
       next_state_hex <= 8'b0;
+      next_state_btn <= 8'b0;
       mode_latch <= 2'b0;
       
       hex_idx <= 3'b0;
+      btn_idx <= 4'b0;
       data <= 32'b0;
       data_idx <= 2'b0;
       
@@ -148,6 +156,34 @@ module cls_spi(
         end else begin
           next_state <= SENDHEX;
           hex_idx <= hex_idx - 1;
+        end
+        state <= SEND;
+      end
+      
+      // SENDJOYPAD - send a glyph corresponding to a joypad button
+      else if (state == SENDJOYPAD) begin
+        case (btn_idx)
+            0: send_buf <= joypad_state[btn_idx] ? 8'h20 : 8'h42; // B
+            1: send_buf <= joypad_state[btn_idx] ? 8'h20 : 8'h59; // Y
+            2: send_buf <= joypad_state[btn_idx] ? 8'h20 : 8'h73; // Select
+            3: send_buf <= joypad_state[btn_idx] ? 8'h20 : 8'h53; // Start
+            4: send_buf <= joypad_state[btn_idx] ? 8'h20 : 8'h5E; // Up
+            5: send_buf <= joypad_state[btn_idx] ? 8'h20 : 8'h64; // Down
+            6: send_buf <= joypad_state[btn_idx] ? 8'h20 : 8'h3C; // Left
+            7: send_buf <= joypad_state[btn_idx] ? 8'h20 : 8'h3E; // Right
+            8: send_buf <= joypad_state[btn_idx] ? 8'h20 : 8'h41; // A
+            9: send_buf <= joypad_state[btn_idx] ? 8'h20 : 8'h58; // X
+            10: send_buf <= joypad_state[btn_idx] ? 8'h20 : 8'h4C; // L
+            11: send_buf <= joypad_state[btn_idx] ? 8'h20 : 8'h52; // R
+            default: send_buf <= 8'h20;
+        endcase
+        send_max <= 0;
+        if (btn_idx == 15) begin
+          btn_idx <= 4'b0;
+          next_state <= next_state_btn;
+        end else begin
+          next_state <= SENDJOYPAD;
+          btn_idx <= btn_idx + 1;
         end
         state <= SEND;
       end
@@ -235,7 +271,7 @@ module cls_spi(
         send_buf <= 48'h48303B315B1B; // ESC  BRACKET '1' ';' '0' 'H'
         send_max <= 5;
         state <= SEND;
-        next_state <= LOOP_7;
+        next_state <= mode_latch == 2'b11 ? LOOP_7b : LOOP_7;
       end
       
       else if (state == LOOP_7) begin
@@ -280,6 +316,18 @@ module cls_spi(
         hex_idx <= 3;
         state <= SENDHEX;
         next_state_hex <= LOOP_11;
+      end
+      
+      else if (state == LOOP_7b) begin
+        send_buf <= 16'h2020;
+        send_max <= 1;
+        state <= SEND;
+        next_state <= LOOP_8b;
+      end
+      
+      else if (state == LOOP_8b) begin
+        state <= SENDJOYPAD;
+        next_state_btn <= LOOP_11;
       end
       
       else if (state == LOOP_11) begin
