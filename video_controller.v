@@ -571,8 +571,8 @@ module video_controller (
                 (tile_data2 << tile_byte_offset2) : 0;
                 
             // enable writes
-            wr_scanlineA <= tile_byte_pos1 < 20 ? 1 : 0;
-            wr_scanlineB <= tile_byte_pos2 < 20 ? 1 : 0;
+            wr_scanline1 <= tile_byte_pos1 < 20 ? 1 : 0;
+            wr_scanline2 <= tile_byte_pos2 < 20 ? 1 : 0;
             
             state <= BG_PIXEL_HOLD_STATE;
           end
