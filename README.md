@@ -37,6 +37,6 @@ FPGABoy requires a number of external components for input and output. Support f
 
 ## Additional Resources
 
- - [Pan Docs](http://nocash.emubase.de/pandocs.htm) [Alternate Link](http://bgb.bircd.org/pandocs.txt) - "Everything You Always Wanted To Know About Gameboy"
+ - [Pan Docs](http://nocash.emubase.de/pandocs.htm) / [Alternate Link](http://bgb.bircd.org/pandocs.txt) - "Everything You Always Wanted To Know About Gameboy"
 
  - [GameBoy Dev'rs](http://www.devrs.com/gb/hardware.php#hardgb) - Schematics and specifications for various elements of the GameBoy hardware.
