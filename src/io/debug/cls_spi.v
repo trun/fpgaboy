@@ -77,7 +77,7 @@ module cls_spi(
   reg [1:0] data_idx;
   
   initial begin
-    $readmemh("data/hexascii.rom", glyph_rom, 0, 15);
+    $readmemh("data/hexascii.hex", glyph_rom, 0, 15);
   end
   
   always @(posedge clock) begin

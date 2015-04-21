@@ -1,7 +1,7 @@
 `default_nettype none
 `timescale 1ns / 1ps
 
-module memory_controller(
+module mmu(
   input  wire        clock,
   input  wire        reset,
   
@@ -59,8 +59,8 @@ module memory_controller(
   reg [7:0] jump_rom [0:9];
   
   initial begin
-    $readmemh("data/boot.rom", boot_rom, 0, 255);
-    $readmemh("data/jump.rom", jump_rom, 0, 9);
+    $readmemb("data/boot.bin", boot_rom, 0, 255);
+    $readmemh("data/jump.hex", jump_rom, 0, 9);
   end
   
   // High RAM
