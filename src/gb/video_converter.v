@@ -1,7 +1,7 @@
 `default_nettype none
 `timescale 1ns / 1ps
 
-module vga_adapter (
+module video_converter (
 	input  wire        reset,
 	input  wire        clock,
 	// gameboy signals
