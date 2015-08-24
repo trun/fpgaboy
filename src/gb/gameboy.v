@@ -149,7 +149,7 @@ module gameboy (
   wire  [7:0] Di_ppu;
   wire        cs_ppu;
   
-  memory_controller memory (
+  Do_mmu memory (
     .clock(clock),
     .reset(reset),
     
@@ -195,7 +195,7 @@ module gameboy (
   wire[4:0] int_ack;
   wire[7:0] jump_addr;
   
-  interrupt_controller interrupt(
+  interrupt interrupt(
     .reset(reset),
     .clock(clock),
     .cs(cs_interrupt),
@@ -222,7 +222,7 @@ module gameboy (
   // Timer Controller
   //
   
-  timer_controller timer (
+  timer timer (
     .reset(reset),
     .clock(cpu_clock),
     .cs(cs_timer),
@@ -239,7 +239,7 @@ module gameboy (
   // Video Controller
   //
   
-  video_controller video (
+  ppu video (
     .reset(reset),
     .clock(clock),
     
@@ -277,7 +277,7 @@ module gameboy (
   // Input Controller
   //
   
-  joypad_controller joypad_controller (
+  joypad joypad_controller (
     .reset(reset),
     .clock(clock),
     .int_ack(int_ack[4]),

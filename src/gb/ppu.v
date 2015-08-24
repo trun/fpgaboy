@@ -1,7 +1,7 @@
 `default_nettype none
 `timescale 1ns / 1ps
 
-module video_controller (
+module ppu (
   input  wire        reset,
   input  wire        clock,
   
@@ -483,9 +483,9 @@ module video_controller (
             if (LCDC[5] && WY < line_count) begin
               tile_x_pos <= { tile_col_num, 3'b0 } + (WX - 7);
               tile_y_pos <= line_count - WY;
-              vram_addrA <= { (line_count - WY) >> 3, 5'b0 } +
-                (({tile_col_num, 3'b0} + (WX - 7)) >> 3) +
-                ((LCDC[6]) ? 16'h1C00 : 16'h1800);
+              vram_addrA <= { (line_count - WY) >> 3, 5'b0 }
+                + (({tile_col_num, 3'b0} + (WX - 7)) >> 3)
+                + (LCDC[6] ? 16'h1C00 : 16'h1800);
               render_background <= 1;
               state <= BG_ADDR_WAIT_STATE;
             end
@@ -494,9 +494,9 @@ module video_controller (
             else if (LCDC[0]) begin
               tile_x_pos <= { tile_col_num, 3'b0 } + SCX;
               tile_y_pos <= SCY + line_count;
-              vram_addrA <= { (SCY + line_count) >> 3, 5'b0 } +
-                (({tile_col_num, 3'b0} + (SCX)) >> 3) +
-                ((LCDC[3]) ? 16'h1C00 : 16'h1800);
+              vram_addrA <= { (SCY + line_count) >> 3, 5'b0 }
+                + (({tile_col_num, 3'b0} + SCX) >> 3)
+                + (LCDC[3] ? 16'h1C00 : 16'h1800);
               render_background <= 1;
               state <= BG_ADDR_WAIT_STATE;
             end
@@ -515,15 +515,17 @@ module video_controller (
           
           BG_DATA_STATE: begin
             vram_addrA <=
-              LCDC[4] ? 16'h0000 + { vram_outA, 4'b0 } + { tile_y_pos[2:0], 1'b0 } :
-              { vram_outA, 4'b0 } + { tile_y_pos[2:0], 1'b0 } < 128 ?
-                16'h1000 + { vram_outA, 4'b0 } + { tile_y_pos[2:0], 1'b0 } :
-              16'h1000 - (~({ vram_outA, 4'b0 } + { tile_y_pos[2:0], 1'b0 }) + 1);
+              LCDC[4]
+                ? 16'h0000 + { vram_outA, 4'b0 } + { tile_y_pos[2:0], 1'b0 }
+                : { vram_outA, 4'b0 } + { tile_y_pos[2:0], 1'b0 } < 128
+                  ? 16'h1000 + { vram_outA, 4'b0 } + { tile_y_pos[2:0], 1'b0 }
+                  : 16'h1000 - (~({ vram_outA, 4'b0 } + { tile_y_pos[2:0], 1'b0 }) + 1);
             vram_addrB <=
-              LCDC[4] ? 16'h0000 + { vram_outA, 4'b0 } + { tile_y_pos[2:0], 1'b0 } + 1 :
-              { vram_outA, 4'b0 } + { tile_y_pos[2:0], 1'b0 } + 1 < 128 ?
-                16'h1000 + { vram_outA, 4'b0 } + { tile_y_pos[2:0], 1'b0 } + 1 :
-              16'h1000 - (~({ vram_outA, 4'b0 } + { tile_y_pos[2:0], 1'b0 } + 1) + 1);
+              LCDC[4]
+                ? 16'h0000 + { vram_outA, 4'b0 } + { tile_y_pos[2:0], 1'b0 } + 1
+                : { vram_outA, 4'b0 } + { tile_y_pos[2:0], 1'b0 } + 1 < 128
+                  ? 16'h1000 + { vram_outA, 4'b0 } + { tile_y_pos[2:0], 1'b0 } + 1
+                  : 16'h1000 - (~({ vram_outA, 4'b0 } + { tile_y_pos[2:0], 1'b0 } + 1) + 1);
             state <= BG_DATA_WAIT_STATE;
           end
           

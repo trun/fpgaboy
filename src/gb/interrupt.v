@@ -1,7 +1,7 @@
 `default_nettype none
 `timescale 1ns / 1ps
 
-module interrupt_controller (
+module interrupt (
   input  wire        clock,
   input  wire        reset,
   input  wire        m1_n,

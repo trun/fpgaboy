@@ -225,7 +225,7 @@ module s6atlys(
   wire [7:0] Di_wram;
   
   // WRAM
-  async_mem #(.asz(8), .depth(8192)) wram (
+  async_mem #(.asz(13), .depth(8192)) wram (
     .rd_data(Di_wram),
     .wr_clk(clock),
     .wr_data(Do),
@@ -234,7 +234,7 @@ module s6atlys(
     .rd_cs(!cs_n && !rd_n)
   );
   
-  // VRAM
+  // VRAM // TODO - doesn't this live in the PPU?
   async_mem #(.asz(8), .depth(8192)) vram (
     .rd_data(Di_vram),
     .wr_clk(clock),

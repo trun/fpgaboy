@@ -138,11 +138,11 @@ module video_converter (
 	// 10 -> dark gray
 	// 11 -> black
 	
-	wire [7:0] my_color = (pixel_count >= X_OFFSET && line_count >= Y_OFFSET && pixel_count < X_OFFSET + 320 && line_count < Y_OFFSET + 288) ?
-									(read_data == 2'b00) ? 8'b11111111 : 
-									((read_data == 2'b01) ? 8'b10101010 :
-									((read_data == 2'b10) ? 8'b01010101 : 8'b00000000)) : 8'b00000000;
+	wire [7:0] color = (pixel_count >= X_OFFSET && line_count >= Y_OFFSET && pixel_count < X_OFFSET + 320 && line_count < Y_OFFSET + 288) ?
+									read_data == 2'b00 ? 8'b11111111 : 
+									read_data == 2'b01 ? 8'b10101010 :
+									read_data == 2'b10 ? 8'b01010101 : 8'b00000000 : 8'b00000000;
 	
-	assign vga_rgb = { my_color, my_color, my_color };
+	assign vga_rgb = { color, color, color };
 	
 endmodule

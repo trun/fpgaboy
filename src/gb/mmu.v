@@ -53,6 +53,24 @@ module mmu(
   
   // when 8'h01 gets written into FF50h the ROM is disabled
   reg boot_rom_enable;
+
+  // dma stuff
+  reg cs_dma;
+  reg dma_rd_n_video;
+  reg dma_wr_n_video;
+  reg[7:0] A_dma_high;
+  reg[7:0] dma_counter;
+  wire[7:0] Do_dma;
+
+  parameter DMA_WR_ENABLE = 0;
+  parameter DMA_WAIT = 1;
+  parameter DMA_WR_DISABLE = 2;
+  parameter DMA_COUNT = 3;
+  reg[1:0] dma_state;
+
+  // if dma is enabled, make address source as the dma address
+  assign A_dma = { A_dma_high, 8'b0 } + dma_counter;
+  wire[15:0] A_temp = cs_dma ? { A_dma_high, 8'b0 } + dma_counter : A;
   
   // Internal ROMs
   reg [7:0] boot_rom [0:255];
@@ -80,13 +98,50 @@ module mmu(
       boot_rom_enable <= 1;
     end
     else
-    begin
+    begin    
+      if (cs_dma) begin
+        case (dma_state)
+          DMA_WR_ENABLE:
+          begin
+            dma_rd_n_video <= 1;
+            dma_wr_n_video <= 0;
+            dma_state <= DMA_WAIT;
+          end
+          DMA_WAIT: dma_state <= DMA_WR_DISABLE;
+          DMA_WR_DISABLE:
+          begin
+            dma_rd_n_video <= 1;
+            dma_wr_n_video <= 1;
+            dma_state <= DMA_COUNT;
+          end
+          DMA_COUNT:
+          begin
+            dma_rd_n_video <= 1;
+            dma_wr_n_video <= 1;
+            dma_state <= DMA_COUNT;
+            dma_counter <= dma_counter + 1;
+            if (dma_counter >= 159) begin
+              cs_dma <= 0;
+            end
+            else begin
+              dma_state <= DMA_WR_ENABLE;
+            end
+          end
+        endcase
+      end
+
       if (!wr_n)
       begin
-        case(A)
+        case (A)
           16'hFF46:
           begin
-            // TODO: DMA
+            if (!cs_dma)
+            begin
+              cs_dma <= 1;
+              dma_counter <= 0;
+              dma_addr <= Di;
+              dma_state <= DMA_WR_ENABLE;
+            end
           end
           16'hFF50: if (Di == 8'h01) boot_rom_enable <= 1'b0;
         endcase
@@ -122,11 +177,18 @@ module mmu(
   assign rd_n = rd_cpu_n;
   
   // PPU
-  assign A_ppu = A_cpu;
-  assign Do_ppu = Di_cpu;
+  assign A_ppu =  (cs_dma) ? 16'hFE00 + dma_counter : A_cpu;
+  assign Do_ppu = Di_cpu; // TODO DMA
   assign wr_ppu_n = wr_cpu_n;
   assign rd_ppu_n = rd_cpu_n;
-  
+
+  assign Do_ppu = 
+    (cs_dma) ? (
+      (cs_boot_rom) ? boot_rom[A_cpu] :
+      (cs_cartridge) ? Di :
+      (cs_internal_ram) ? Do :
+ 8'hFF) : 8'hFF; 
+
   assign Do_cpu =
     (cs_boot_rom) ? boot_rom[A_cpu] :
     (cs_high_ram) ? Do_high_ram :
