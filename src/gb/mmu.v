@@ -186,8 +186,7 @@ module mmu(
     (cs_dma) ? (
       (cs_boot_rom) ? boot_rom[A_cpu] :
       (cs_cartridge) ? Di :
-      (cs_internal_ram) ? Do :
- 8'hFF) : 8'hFF; 
+      (cs_internal_ram) ? Do : 8'hFF) : 8'hFF; 
 
   assign Do_cpu =
     (cs_boot_rom) ? boot_rom[A_cpu] :
