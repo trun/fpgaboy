@@ -219,7 +219,7 @@ module s6atlys(
   reg [7:0] tetris_rom [0:32767];
   
   initial begin
-    $readmemb("data/tetris.bin", tetris_rom, 0, 32767);
+    $readmemh("data/tetris.hex", tetris_rom, 0, 32767);
   end
   
   wire [7:0] Di_wram;

@@ -59,7 +59,7 @@ module mmu(
   reg [7:0] jump_rom [0:9];
   
   initial begin
-    $readmemb("data/boot.bin", boot_rom, 0, 255);
+    $readmemh("data/boot.hex", boot_rom, 0, 255);
     $readmemh("data/jump.hex", jump_rom, 0, 9);
   end
   

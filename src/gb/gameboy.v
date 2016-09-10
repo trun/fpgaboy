@@ -149,7 +149,7 @@ module gameboy (
   wire  [7:0] Di_ppu;
   wire        cs_ppu;
   
-  memory_controller memory (
+  mmu memory (
     .clock(clock),
     .reset(reset),
     
